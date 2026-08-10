@@ -11,25 +11,19 @@ type Props = {
   name?: string;
 };
 
-type ShareStatus = "idle" | "sharing" | "uploading" | "error";
+type ShareStatus = "idle" | "uploading" | "error";
 
-// Web Share API Level 2 (file sharing) isn't in every TS DOM lib snapshot
-// yet, so we type-guard through a narrow local interface instead of `any`.
-type ShareableNavigator = Navigator & {
-  canShare?: (data: { files: File[] }) => boolean;
-  share: (data: { files?: File[]; text?: string; url?: string }) => Promise<void>;
-};
-
-function getShareableNavigator(): ShareableNavigator | null {
-  if (typeof navigator === "undefined") return null;
-  const nav = navigator as ShareableNavigator;
-  return typeof nav.share === "function" ? nav : null;
-}
+const SHARE_HASHTAG = BRAND.hashtag.replace(/^#/, "");
 
 function shareViaLinkIntent(caption: string, shareUrl: string) {
   const text = encodeURIComponent(caption);
   const url = encodeURIComponent(shareUrl);
-  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener,noreferrer");
+  const hashtags = encodeURIComponent(SHARE_HASHTAG);
+  window.open(
+    `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
 }
 
 export default function ShareToXButton({ blob, format, name }: Props) {
@@ -37,9 +31,8 @@ export default function ShareToXButton({ blob, format, name }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const caption = BRAND.shareCaption(format === "card" ? name : undefined);
-  const filename = format === "pfp" ? "hh-goa-2026-frame.png" : "hh-goa-2026-builder-card.png";
 
-  const uploadAndShareViaLink = async () => {
+  const handleShare = async () => {
     setStatus("uploading");
     setError(null);
     try {
@@ -56,33 +49,7 @@ export default function ShareToXButton({ blob, format, name }: Props) {
     }
   };
 
-  const handleShare = async () => {
-    setError(null);
-    const nav = getShareableNavigator();
-    const file = new File([blob], filename, { type: "image/png" });
-    const canNativeShareFile = Boolean(nav?.canShare?.({ files: [file] }));
-
-    if (nav && canNativeShareFile) {
-      setStatus("sharing");
-      try {
-        await nav.share({ files: [file], text: caption });
-        setStatus("idle");
-        return;
-      } catch (err) {
-        // User cancelling the native share sheet is not a failure — just
-        // reset quietly instead of falling through to the link fallback.
-        if (err instanceof DOMException && err.name === "AbortError") {
-          setStatus("idle");
-          return;
-        }
-        // Any other native-share failure: fall through to the link-intent path below.
-      }
-    }
-
-    await uploadAndShareViaLink();
-  };
-
-  const isBusy = status === "sharing" || status === "uploading";
+  const isBusy = status === "uploading";
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -93,7 +60,7 @@ export default function ShareToXButton({ blob, format, name }: Props) {
         className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-white/20 bg-white/5 text-white text-sm font-semibold hover:bg-white/10 active:bg-white/15 disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2"
       >
         <XLogo />
-        {status === "uploading" ? "Preparing…" : status === "sharing" ? "Opening share…" : "Share to X"}
+        {status === "uploading" ? "Preparing…" : "Share to X"}
       </button>
 
       {error && (

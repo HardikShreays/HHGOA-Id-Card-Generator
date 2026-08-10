@@ -22,8 +22,8 @@ export const BRAND = {
   },
   shareCaption: (name?: string) =>
     name
-      ? `I just built my HH Goa 2026 badge, ${name}! 🌴 #FrameInGoa`
-      : `I just built my HH Goa 2026 frame! 🌴 #FrameInGoa`,
+      ? `I just built my HH Goa 2026 badge, ${name}! 🌴`
+      : `I just built my HH Goa 2026 frame! 🌴`,
 };
 
 // Format B text layout — matches the "guide band" baked into card-bg.png
