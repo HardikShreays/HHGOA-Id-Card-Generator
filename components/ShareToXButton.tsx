@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { BRAND, type Format } from "@/lib/constants";
 import { uploadToShareStore, ShareUploadError } from "@/lib/uploadToShareStore";
+import { computeBuilderIdCode, type BuilderFields } from "@/lib/canvasCompose";
 
 type Props = {
   blob: Blob;
   format: Format;
+  /** Builder's name — used to personalize the tweet caption. */
   name?: string;
-  shareId?: string;
+  /** Card/PFP/Boarding only — lets the upload reuse the SAME id the QR code
+   *  on the Builder ID was rendered with (see lib/canvasCompose.ts
+   *  drawIdCard), so scanning the QR resolves once shared. */
+  fields?: BuilderFields;
 };
 
 type ShareStatus = "idle" | "uploading" | "error";
@@ -26,7 +31,7 @@ function shareViaLinkIntent(caption: string, shareUrl: string) {
   );
 }
 
-export default function ShareToXButton({ blob, format, name, shareId }: Props) {
+export default function ShareToXButton({ blob, format, name, fields }: Props) {
   const [status, setStatus] = useState<ShareStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +41,7 @@ export default function ShareToXButton({ blob, format, name, shareId }: Props) {
     setStatus("uploading");
     setError(null);
     try {
+      const shareId = fields?.name && fields?.role ? computeBuilderIdCode(fields) : undefined;
       const { shareUrl } = await uploadToShareStore(blob, format, shareId);
       shareViaLinkIntent(caption, shareUrl);
       setStatus("idle");
@@ -57,7 +63,7 @@ export default function ShareToXButton({ blob, format, name, shareId }: Props) {
         type="button"
         onClick={handleShare}
         disabled={isBusy}
-        className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-paper/20 bg-paper/5 text-paper text-sm font-semibold hover:bg-paper/10 disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2"
+        className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-gold/30 bg-forest-deep/40 text-paper text-sm font-semibold hover:bg-forest-deep/70 active:bg-forest-deep disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2 font-[family-name:var(--font-body)]"
       >
         <XLogo />
         {status === "uploading" ? "Preparing…" : "Share to X"}

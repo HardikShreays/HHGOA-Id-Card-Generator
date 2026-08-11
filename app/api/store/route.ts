@@ -22,10 +22,15 @@ export const runtime = "nodejs";
 // (plan §6.2 point 4 — "keep exports under ~5MB").
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-const ID_PATTERN = /^[a-zA-Z0-9-]{1,80}$/;
-
 function isAllowedFormat(value: string | null): value is "pfp" | "card" | "boarding" | "team" {
   return value === "pfp" || value === "card" || value === "boarding" || value === "team";
+}
+
+/** Deterministic Builder ID codes look like "HH-GOA-7F3A" — validate shape
+ *  before trusting a client-supplied id as a blob storage key. */
+function isValidShareId(value: string | null): value is string {
+  if (!value) return false;
+  return /^[A-Za-z0-9-]{3,40}$/.test(value);
 }
 
 export async function POST(req: NextRequest) {
@@ -67,12 +72,11 @@ export async function POST(req: NextRequest) {
   }
 
   const requestedId = req.headers.get("x-share-id");
-  const id =
-    requestedId && ID_PATTERN.test(requestedId)
-      ? requestedId
-      : typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const id = isValidShareId(requestedId)
+    ? requestedId
+    : typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   try {
     const blob = await put(`shares/${id}.png`, bytes, {

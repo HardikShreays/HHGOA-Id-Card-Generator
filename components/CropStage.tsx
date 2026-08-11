@@ -46,7 +46,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center gap-4">
-      <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-black/40 border border-white/10">
+      <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-black/40 border border-gold/20">
         <Cropper
           image={imageSrc}
           crop={crop}
@@ -98,7 +98,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           type="button"
           onClick={onCancel}
           disabled={isExporting}
-          className="flex-1 min-h-[44px] rounded-xl border border-paper/15 text-paper/70 text-sm font-medium hover:text-paper hover:border-paper/30 disabled:opacity-50 transition-colors"
+          className="flex-1 min-h-[44px] rounded-xl border border-gold/25 text-paper/70 text-sm font-medium hover:text-paper hover:border-gold/50 disabled:opacity-50 transition-colors"
         >
           Back
         </button>
@@ -106,7 +106,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           type="button"
           onClick={handleContinue}
           disabled={isExporting || !croppedAreaPixels}
-          className="flex-1 min-h-[44px] rounded-xl bg-coral text-paper text-sm font-semibold hover:bg-coral/90 disabled:opacity-50 disabled:cursor-wait transition-colors"
+          className="flex-1 min-h-[44px] rounded-xl bg-gold text-ink text-sm font-semibold hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-colors"
         >
           {isExporting ? "Processing…" : "Continue"}
         </button>

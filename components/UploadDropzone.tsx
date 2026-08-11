@@ -137,7 +137,7 @@ export default function UploadDropzone({ onImageReady }: Props) {
         className={[
           "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors cursor-pointer select-none",
           "min-h-[220px]", // comfortably >44px tap target, generous on mobile
-          isDragOver ? "border-gold bg-gold/10" : "border-paper/20 hover:border-paper/40",
+          isDragOver ? "border-gold bg-forest-deep/40" : "border-gold/30 hover:border-gold/50",
           isBusy ? "cursor-wait opacity-70" : "",
         ].join(" ")}
       >
@@ -219,13 +219,13 @@ function SourcePickerSheet({
       aria-label="Choose photo source"
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-paper/10 bg-forest p-2 shadow-xl"
+        className="w-full max-w-md rounded-2xl border border-gold/20 bg-forest-deep p-2 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onCamera}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-paper/10 active:bg-paper/15"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-gold/10 active:bg-gold/15"
         >
           <CameraIcon />
           <span className="text-base font-medium">Take a photo</span>
@@ -233,7 +233,7 @@ function SourcePickerSheet({
         <button
           type="button"
           onClick={onGallery}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-paper/10 active:bg-paper/15"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-gold/10 active:bg-gold/15"
         >
           <GalleryIcon />
           <span className="text-base font-medium">Choose from library</span>
@@ -241,7 +241,7 @@ function SourcePickerSheet({
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-1 w-full rounded-xl px-4 py-3.5 text-center text-sm text-paper/60 hover:bg-paper/5 active:bg-paper/10"
+          className="mt-1 w-full rounded-xl px-4 py-3.5 text-center text-sm text-paper/60 hover:bg-gold/5 active:bg-gold/10"
         >
           Cancel
         </button>
@@ -272,7 +272,7 @@ function GalleryIcon() {
 function Spinner() {
   return (
     <div
-      className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white"
+      className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold"
       aria-hidden="true"
     />
   );

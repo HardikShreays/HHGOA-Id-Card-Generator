@@ -33,14 +33,13 @@ export async function uploadToShareStore(
 ): Promise<ShareStoreResult> {
   let res: Response;
   try {
-    const headers: Record<string, string> = {
-      "Content-Type": "image/png",
-      "X-Format": format,
-    };
-    if (shareId) headers["X-Share-Id"] = shareId;
     res = await fetch("/api/store", {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "image/png",
+        "X-Format": format,
+        ...(shareId ? { "X-Share-Id": shareId } : {}),
+      },
       body: blob,
     });
   } catch (err) {

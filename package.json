@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "gen-assets": "python3 scripts/gen-brand-assets.py"
+    "start": "next start"
   },
   "dependencies": {
     "@vercel/blob": "^2.7.0",
@@ -20,7 +19,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/qrcode": "^1.5.6",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",

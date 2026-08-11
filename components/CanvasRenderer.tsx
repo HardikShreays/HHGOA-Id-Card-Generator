@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  drawBoardingPass,
   drawFrame,
   drawIdCard,
+  drawBoardingPass,
   drawTeamFrame,
   type BuilderFields,
   type TeamFields,
@@ -14,30 +14,50 @@ import type { Format } from "@/lib/constants";
 export type RenderedResult = {
   blob: Blob;
   objectUrl: string;
-  shareId: string;
 };
 
-type Props = {
-  format: Format;
-  croppedImageSrc?: string;
-  fields?: BuilderFields;
-  teamFields?: TeamFields;
-  shareId: string;
-  onComplete: (result: RenderedResult) => void;
-  onError: (message: string) => void;
+type Props =
+  | {
+      format: "pfp" | "card" | "boarding";
+      croppedImageSrc: string;
+      fields?: BuilderFields;
+      teamFields?: undefined;
+      onComplete: (result: RenderedResult) => void;
+      onError: (message: string) => void;
+    }
+  | {
+      format: "team";
+      croppedImageSrc?: undefined;
+      fields?: undefined;
+      teamFields: TeamFields;
+      onComplete: (result: RenderedResult) => void;
+      onError: (message: string) => void;
+    };
+
+const STATUS_LABEL: Record<Format, string> = {
+  pfp: "frame",
+  card: "builder pass",
+  boarding: "boarding pass",
+  team: "team frame",
 };
 
-export default function CanvasRenderer({
-  format,
-  croppedImageSrc,
-  fields,
-  teamFields,
-  shareId,
-  onComplete,
-  onError,
-}: Props) {
+/**
+ * Runs the canvas compositor (drawFrame / drawIdCard / drawBoardingPass /
+ * drawTeamFrame) against the cropped image(s) + fields, and reports the
+ * result blob back up. Pure glue — all the actual compositing logic lives
+ * in lib/canvasCompose.ts so it stays framework-agnostic and testable on
+ * its own.
+ */
+export default function CanvasRenderer(props: Props) {
+  const { format, onComplete, onError } = props;
   const [status, setStatus] = useState<"rendering" | "done">("rendering");
+  // Monotonic id so a stale async render (StrictMode remount or rapid input
+  // changes) cannot call onComplete/onError after a newer render started.
   const renderIdRef = useRef(0);
+
+  // Stable-ish dependency keys for the effect below.
+  const fieldsKey = props.format !== "team" ? `${props.fields?.name ?? ""}|${props.fields?.role ?? ""}|${props.fields?.teamName ?? ""}|${props.fields?.socials?.x ?? ""}|${props.fields?.socials?.github ?? ""}` : "";
+  const teamKey = props.format === "team" ? `${props.teamFields.teamName}|${props.teamFields.members.map((m) => `${m.name}:${m.role ?? ""}:${m.imageSrc}`).join(",")}` : "";
 
   useEffect(() => {
     const renderId = ++renderIdRef.current;
@@ -46,31 +66,23 @@ export default function CanvasRenderer({
 
     const run = async () => {
       try {
-        const shareUrl =
-          typeof window !== "undefined" ? `${window.location.origin}/share/${shareId}` : "";
-        const empty = { name: "", role: "" };
         let blob: Blob;
-
-        if (format === "pfp") {
-          if (!croppedImageSrc) throw new Error("Missing photo.");
-          blob = await drawFrame(croppedImageSrc, fields);
-        } else if (format === "card") {
-          if (!croppedImageSrc) throw new Error("Missing photo.");
-          blob = await drawIdCard(croppedImageSrc, fields ?? empty, shareUrl);
-        } else if (format === "boarding") {
-          if (!croppedImageSrc) throw new Error("Missing photo.");
-          blob = await drawBoardingPass(croppedImageSrc, fields ?? empty);
+        if (props.format === "pfp") {
+          blob = await drawFrame(props.croppedImageSrc, props.fields);
+        } else if (props.format === "card") {
+          blob = await drawIdCard(props.croppedImageSrc, props.fields ?? { name: "", role: "" });
+        } else if (props.format === "boarding") {
+          blob = await drawBoardingPass(props.croppedImageSrc, props.fields ?? { name: "", role: "" });
+        } else if (props.format === "team") {
+          blob = await drawTeamFrame(props.teamFields);
         } else {
-          if (!teamFields || teamFields.members.length < 2) {
-            throw new Error("Team frame needs at least two teammates.");
-          }
-          blob = await drawTeamFrame(teamFields.members, teamFields.teamName);
+          throw new Error("Unknown format.");
         }
 
         if (cancelled || renderId !== renderIdRef.current) return;
         const objectUrl = URL.createObjectURL(blob);
         setStatus("done");
-        onComplete({ blob, objectUrl, shareId });
+        onComplete({ blob, objectUrl });
       } catch (err) {
         if (cancelled || renderId !== renderIdRef.current) return;
         onError(
@@ -86,18 +98,18 @@ export default function CanvasRenderer({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format, croppedImageSrc, fields?.name, fields?.role, fields?.teamName, teamFields, shareId]);
+  }, [format, props.croppedImageSrc, fieldsKey, teamKey]);
 
   if (status === "rendering") {
-    const label =
-      format === "pfp" ? "frame" : format === "team" ? "team frame" : format === "boarding" ? "pass" : "card";
     return (
       <div className="w-full max-w-md mx-auto flex flex-col items-center gap-3 py-16">
         <div
-          className="h-8 w-8 rounded-full border-2 border-paper/20 border-t-gold animate-spin"
+          className="h-8 w-8 rounded-full border-2 border-gold/20 border-t-gold animate-spin"
           aria-hidden="true"
         />
-        <p className="text-sm text-paper/50">Compositing your {label}…</p>
+        <p className="text-sm text-paper/50 font-[family-name:var(--font-body)]">
+          Compositing your {STATUS_LABEL[format]}…
+        </p>
       </div>
     );
   }
