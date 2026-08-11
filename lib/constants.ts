@@ -1,46 +1,84 @@
-// lib/constants.ts
-// Brand tokens + shared config. Colors/fonts are placeholders until the
-// organizers hand over the real HH Goa 2026 brand kit (see plan §11).
-
 export const BRAND = {
   eventName: "HH Goa 2026",
+  eventNameDevanagari: "गोवा",
+  studioCredit: "2:47PM STUDIO",
   hashtag: "#FrameInGoa",
+  dateRange: "28–31 OCT 2026",
+  location: "GOA, INDIA",
+  tagline: "4 days. one rhythm. everything intentional.",
   colors: {
-    primary: "#0F7A6C", // TODO: replace with official HH Goa 2026 primary
-    accent: "#F2B807", // TODO: replace with official accent
-    background: "#0B1220", // TODO: replace with official background
-    text: "#FFFFFF", // TODO: replace with official text color
+    forest: "#0B3D2E",
+    forestDeep: "#062A20",
+    parchment: "#F6ECD9",
+    gold: "#E8B923",
+    coral: "#E85D75",
+    ink: "#12241C",
+    paper: "#FFF9EE",
   },
-  fontFamily: "'Poppins', 'Inter', system-ui, sans-serif", // TODO: swap for event font when provided
+  fonts: {
+    display: "'Fraunces', 'Poppins', serif",
+    devanagari: "'Noto Sans Devanagari', sans-serif",
+    mono: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    body: "'Poppins', 'Inter', system-ui, sans-serif",
+  },
+  // next/font CSS variables — canvas reads these so exports use the same
+  // loaded faces as the UI (avoids fallback-font PNGs on a cold cache).
+  fontVars: {
+    display: "--font-fraunces",
+    body: "--font-poppins",
+    mono: "--font-jetbrains",
+    devanagari: "--font-noto-deva",
+  },
   canvas: {
-    pfpSize: 1200, // Format A output: 1200x1200 square
-    cardWidth: 1080, // Format B output
+    pfpSize: 1200,
+    cardWidth: 1080,
     cardHeight: 1350,
-    // Matches the photo-slot rect baked into public/assets/card-bg.png
-    // (see scripts/gen-brand-assets — regenerate both together if either changes).
-    photoSlot: { x: 230, y: 210, width: 620, height: 826, cornerRadius: 28 },
+    boardingWidth: 1080,
+    boardingHeight: 620,
+    teamWidth: 1200,
+    teamHeight: 630,
+    // Must match the photo well baked into public/assets/card-bg.png
+    photoSlot: { x: 270, y: 186, width: 540, height: 548, cornerRadius: 24 },
+    pfpPhoto: { cx: 600, cy: 508, r: 318 },
+    boardingPhoto: { x: 48, y: 148, size: 196 },
   },
   shareCaption: (name?: string) =>
     name
-      ? `I just built my HH Goa 2026 badge, ${name}! 🌴`
-      : `I just built my HH Goa 2026 frame! 🌴`,
+      ? `I just framed myself for HH Goa 2026 — ${name}. 4 days. one rhythm.`
+      : `I just framed myself for HH Goa 2026. 4 days. one rhythm.`,
 };
 
-// Format B text layout — matches the "guide band" baked into card-bg.png
-// (see photoSlot above; band starts ~34px below the slot and runs ~210px tall).
-// Coordinates are canvas pixels, origin top-left, on the 1080x1350 card.
 export const CARD_TEXT_LAYOUT = {
-  // y values are the TOP of each text block (ctx.textBaseline = "top").
-  name: { cx: 540, y: 1082, maxWidth: 900, maxFontSize: 54, minFontSize: 26, color: "#FFFFFF" },
-  role: { cx: 540, y: 1148, maxWidth: 900, maxFontSize: 28, minFontSize: 16, color: "#F2B807" },
-  builderTitle: { cx: 540, y: 1192, maxWidth: 900, maxFontSize: 22, minFontSize: 14, color: "rgba(255,255,255,0.78)" },
-  footer: { cx: 540, y: 1300, fontSize: 18, color: "rgba(255,255,255,0.5)", text: "HH Goa 2026 · Builder" },
+  name: { cx: 540, y: 762, maxWidth: 900, maxFontSize: 48, minFontSize: 24 },
+  teamPill: { cx: 540, y: 822 },
+  role: { cx: 540, y: 872, maxWidth: 900, maxFontSize: 24, minFontSize: 14 },
+  builderTitle: { cx: 540, y: 910, maxWidth: 900, maxFontSize: 22, minFontSize: 14 },
+  idCode: { x: 72, y: 1008 },
+  barcode: { x: 72, y: 1054, width: 420, height: 72 },
+  qr: { x: 848, y: 1000, size: 160 },
+  footer: { cx: 540, y: 1284 },
 };
 
-// Upload validation / performance limits (Phase 1 + Phase 8 perf checklist)
+export const PFP_TEXT_LAYOUT = {
+  pillY: 78,
+  name: { cx: 600, y: 880, maxWidth: 920, maxFontSize: 44, minFontSize: 22 },
+  title: { cx: 600, y: 940, maxWidth: 880, maxFontSize: 22, minFontSize: 14 },
+  footerY: 1128,
+};
+
+export const BOARDING_LAYOUT = {
+  passenger: { x: 272, y: 168 },
+  seat: { x: 272, y: 268 },
+  gate: { x: 500, y: 268 },
+  klass: { x: 272, y: 368 },
+  barcode: { x: 48, y: 520, width: 700, height: 56 },
+  stubId: { cx: 940, y: 520 },
+  perforationX: 820,
+};
+
 export const UPLOAD_LIMITS = {
-  maxFileSizeBytes: 15 * 1024 * 1024, // 15MB cap, per plan §4 Phase 1
-  maxLongEdgePx: 2500, // downscale on load if longer edge exceeds this
+  maxFileSizeBytes: 15 * 1024 * 1024,
+  maxLongEdgePx: 2500,
   acceptedExtensions: [".jpg", ".jpeg", ".png", ".heic", ".heif"],
   acceptedMimePrefixes: ["image/"],
   heicMimeTypes: ["image/heic", "image/heif"],
@@ -48,41 +86,78 @@ export const UPLOAD_LIMITS = {
 };
 
 export type UploadedImage = {
-  /** Object URL pointing at the (possibly downscaled/converted) working image */
   objectUrl: string;
-  /** Original file name, kept for reference/debugging */
   fileName: string;
   width: number;
   height: number;
 };
 
-/** The two output formats, per plan §0. */
-export type Format = "pfp" | "card";
+export type Format = "pfp" | "card" | "boarding" | "team";
 
-/** A cropped image ready to hand to the (Phase 3) canvas compositor. */
 export type CroppedImage = {
   objectUrl: string;
   width: number;
   height: number;
 };
 
-// Crop-stage config per format (plan §4 Phase 2 step 2).
 export const FORMAT_CONFIG: Record<
   Format,
-  { label: string; shortLabel: string; aspect: number; cropShape: "round" | "rect"; maxOutputEdge: number }
+  {
+    label: string;
+    shortLabel: string;
+    aspect: number;
+    cropShape: "round" | "rect";
+    maxOutputEdge: number;
+    width: number;
+    height: number;
+    blurb: string;
+    filename: string;
+  }
 > = {
   pfp: {
-    label: "PFP Frame",
+    label: "Profile Frame",
     shortLabel: "Frame",
-    aspect: 1, // 1:1 square, matches X's circular PFP crop
+    aspect: 1,
     cropShape: "round",
     maxOutputEdge: 1400,
+    width: 1200,
+    height: 1200,
+    blurb: "Circular PFP with a गोवा badge and your builder title.",
+    filename: "hh-goa-2026-frame.png",
   },
   card: {
-    label: "Builder ID Card",
-    shortLabel: "ID Card",
-    aspect: 3 / 4, // portrait photo slot; refine once card-bg.png is designed
+    label: "Builder Pass",
+    shortLabel: "Pass",
+    aspect: 540 / 548,
     cropShape: "rect",
     maxOutputEdge: 1600,
+    width: 1080,
+    height: 1350,
+    blurb: "VIP badge — name, team, ID code, barcode, and a share QR.",
+    filename: "hh-goa-2026-builder-pass.png",
+  },
+  boarding: {
+    label: "Boarding Pass",
+    shortLabel: "Ticket",
+    aspect: 1,
+    cropShape: "round",
+    maxOutputEdge: 900,
+    width: 1080,
+    height: 620,
+    blurb: "Ticket stub. Seat from your name. Gate is your team.",
+    filename: "hh-goa-2026-boarding-pass.png",
+  },
+  team: {
+    label: "Team Frame",
+    shortLabel: "Team",
+    aspect: 1,
+    cropShape: "round",
+    maxOutputEdge: 900,
+    width: 1200,
+    height: 630,
+    blurb: "Bring 2–4 teammates into one combined frame.",
+    filename: "hh-goa-2026-team-frame.png",
   },
 };
+
+export const FORMATS: Format[] = ["pfp", "card", "boarding", "team"];

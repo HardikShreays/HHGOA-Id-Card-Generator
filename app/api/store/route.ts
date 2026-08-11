@@ -22,8 +22,10 @@ export const runtime = "nodejs";
 // (plan §6.2 point 4 — "keep exports under ~5MB").
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-function isAllowedFormat(value: string | null): value is "pfp" | "card" {
-  return value === "pfp" || value === "card";
+const ID_PATTERN = /^[a-zA-Z0-9-]{1,80}$/;
+
+function isAllowedFormat(value: string | null): value is "pfp" | "card" | "boarding" | "team" {
+  return value === "pfp" || value === "card" || value === "boarding" || value === "team";
 }
 
 export async function POST(req: NextRequest) {
@@ -64,10 +66,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Image is too large to share." }, { status: 413 });
   }
 
+  const requestedId = req.headers.get("x-share-id");
   const id =
-    typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    requestedId && ID_PATTERN.test(requestedId)
+      ? requestedId
+      : typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   try {
     const blob = await put(`shares/${id}.png`, bytes, {

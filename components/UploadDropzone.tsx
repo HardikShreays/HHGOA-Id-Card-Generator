@@ -137,7 +137,7 @@ export default function UploadDropzone({ onImageReady }: Props) {
         className={[
           "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors cursor-pointer select-none",
           "min-h-[220px]", // comfortably >44px tap target, generous on mobile
-          isDragOver ? "border-emerald-400 bg-emerald-950/20" : "border-white/20 hover:border-white/40",
+          isDragOver ? "border-gold bg-gold/10" : "border-paper/20 hover:border-paper/40",
           isBusy ? "cursor-wait opacity-70" : "",
         ].join(" ")}
       >
@@ -162,30 +162,30 @@ export default function UploadDropzone({ onImageReady }: Props) {
         {status === "converting" && (
           <>
             <Spinner />
-            <p className="text-sm text-white/80">Converting your iPhone photo…</p>
+            <p className="text-sm text-paper/80">Converting your iPhone photo…</p>
           </>
         )}
 
         {status === "processing" && (
           <>
             <Spinner />
-            <p className="text-sm text-white/80">Preparing your photo…</p>
+            <p className="text-sm text-paper/80">Preparing your photo…</p>
           </>
         )}
 
         {!isBusy && (
           <>
             <UploadIcon />
-            <p className="text-base font-medium text-white">
+            <p className="text-base font-medium text-paper">
               Tap to upload, or drag a photo here
             </p>
-            <p className="text-xs text-white/50">JPG, PNG, or HEIC · up to 15MB</p>
+            <p className="text-xs text-paper/50">JPG, PNG, or HEIC · up to 15MB</p>
           </>
         )}
       </div>
 
       {status === "error" && error && (
-        <p role="alert" className="mt-3 text-sm text-red-400 text-center">
+        <p role="alert" className="mt-3 text-sm text-coral text-center">
           {error}
         </p>
       )}
@@ -219,13 +219,13 @@ function SourcePickerSheet({
       aria-label="Choose photo source"
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-2 shadow-xl"
+        className="w-full max-w-md rounded-2xl border border-paper/10 bg-forest p-2 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onCamera}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-white hover:bg-white/10 active:bg-white/15"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-paper/10 active:bg-paper/15"
         >
           <CameraIcon />
           <span className="text-base font-medium">Take a photo</span>
@@ -233,7 +233,7 @@ function SourcePickerSheet({
         <button
           type="button"
           onClick={onGallery}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-white hover:bg-white/10 active:bg-white/15"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-paper/10 active:bg-paper/15"
         >
           <GalleryIcon />
           <span className="text-base font-medium">Choose from library</span>
@@ -241,7 +241,7 @@ function SourcePickerSheet({
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-1 w-full rounded-xl px-4 py-3.5 text-center text-sm text-white/60 hover:bg-white/5 active:bg-white/10"
+          className="mt-1 w-full rounded-xl px-4 py-3.5 text-center text-sm text-paper/60 hover:bg-paper/5 active:bg-paper/10"
         >
           Cancel
         </button>
@@ -287,7 +287,7 @@ function UploadIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.75"
-      className="text-white/70"
+      className="text-paper/70"
       aria-hidden="true"
     >
       <path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />

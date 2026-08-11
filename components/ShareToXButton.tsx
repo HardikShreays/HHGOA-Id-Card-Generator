@@ -7,8 +7,8 @@ import { uploadToShareStore, ShareUploadError } from "@/lib/uploadToShareStore";
 type Props = {
   blob: Blob;
   format: Format;
-  /** Builder's name (Format B only) — used to personalize the tweet caption. */
   name?: string;
+  shareId?: string;
 };
 
 type ShareStatus = "idle" | "uploading" | "error";
@@ -26,17 +26,17 @@ function shareViaLinkIntent(caption: string, shareUrl: string) {
   );
 }
 
-export default function ShareToXButton({ blob, format, name }: Props) {
+export default function ShareToXButton({ blob, format, name, shareId }: Props) {
   const [status, setStatus] = useState<ShareStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const caption = BRAND.shareCaption(format === "card" ? name : undefined);
+  const caption = BRAND.shareCaption(name);
 
   const handleShare = async () => {
     setStatus("uploading");
     setError(null);
     try {
-      const { shareUrl } = await uploadToShareStore(blob, format);
+      const { shareUrl } = await uploadToShareStore(blob, format, shareId);
       shareViaLinkIntent(caption, shareUrl);
       setStatus("idle");
     } catch (err) {
@@ -57,14 +57,14 @@ export default function ShareToXButton({ blob, format, name }: Props) {
         type="button"
         onClick={handleShare}
         disabled={isBusy}
-        className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-white/20 bg-white/5 text-white text-sm font-semibold hover:bg-white/10 active:bg-white/15 disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2"
+        className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-paper/20 bg-paper/5 text-paper text-sm font-semibold hover:bg-paper/10 disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2"
       >
         <XLogo />
         {status === "uploading" ? "Preparing…" : "Share to X"}
       </button>
 
       {error && (
-        <p role="alert" className="text-xs text-red-400 text-center max-w-xs">
+        <p role="alert" className="text-xs text-coral text-center max-w-xs">
           {error}
         </p>
       )}

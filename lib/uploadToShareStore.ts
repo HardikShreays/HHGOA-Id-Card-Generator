@@ -26,15 +26,21 @@ export type ShareStoreResult = {
  * ShareUploadError on any failure so callers can show an inline message and
  * fall back to "download + post manually" instead of a blocking alert.
  */
-export async function uploadToShareStore(blob: Blob, format: Format): Promise<ShareStoreResult> {
+export async function uploadToShareStore(
+  blob: Blob,
+  format: Format,
+  shareId?: string
+): Promise<ShareStoreResult> {
   let res: Response;
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "image/png",
+      "X-Format": format,
+    };
+    if (shareId) headers["X-Share-Id"] = shareId;
     res = await fetch("/api/store", {
       method: "POST",
-      headers: {
-        "Content-Type": "image/png",
-        "X-Format": format,
-      },
+      headers,
       body: blob,
     });
   } catch (err) {

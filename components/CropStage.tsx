@@ -64,7 +64,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
       </div>
 
       <div className="w-full flex items-center gap-3 px-1">
-        <span className="text-xs text-white/50 shrink-0" aria-hidden="true">
+        <span className="text-xs text-paper/50 shrink-0" aria-hidden="true">
           −
         </span>
         <input
@@ -75,20 +75,20 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           value={zoom}
           onChange={(e) => setZoom(Number(e.target.value))}
           aria-label="Zoom"
-          className="w-full accent-emerald-400 h-11 touch-none"
+          className="w-full accent-gold h-11 touch-none"
         />
-        <span className="text-sm text-white/50 shrink-0" aria-hidden="true">
+        <span className="text-sm text-paper/50 shrink-0" aria-hidden="true">
           +
         </span>
       </div>
 
-      <p className="text-xs text-white/40 text-center">
+      <p className="text-xs text-paper/40 text-center">
         Drag to reposition, pinch or use the slider to zoom. Looks good already? Just hit
         Continue.
       </p>
 
       {error && (
-        <p role="alert" className="text-sm text-red-400 text-center">
+        <p role="alert" className="text-sm text-coral text-center">
           {error}
         </p>
       )}
@@ -98,7 +98,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           type="button"
           onClick={onCancel}
           disabled={isExporting}
-          className="flex-1 min-h-[44px] rounded-xl border border-white/15 text-white/70 text-sm font-medium hover:text-white hover:border-white/30 disabled:opacity-50 transition-colors"
+          className="flex-1 min-h-[44px] rounded-xl border border-paper/15 text-paper/70 text-sm font-medium hover:text-paper hover:border-paper/30 disabled:opacity-50 transition-colors"
         >
           Back
         </button>
@@ -106,7 +106,7 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           type="button"
           onClick={handleContinue}
           disabled={isExporting || !croppedAreaPixels}
-          className="flex-1 min-h-[44px] rounded-xl bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait transition-colors"
+          className="flex-1 min-h-[44px] rounded-xl bg-coral text-paper text-sm font-semibold hover:bg-coral/90 disabled:opacity-50 disabled:cursor-wait transition-colors"
         >
           {isExporting ? "Processing…" : "Continue"}
         </button>
