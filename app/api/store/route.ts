@@ -12,9 +12,14 @@
 // Requires a Vercel Blob store attached to the project (sets
 // BLOB_READ_WRITE_TOKEN automatically) — see README "Deploy" section.
 
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteUrl } from "@/lib/site";
+
+function isBlobAlreadyExistsError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /already exists/i.test(message);
+}
 
 export const runtime = "nodejs";
 
@@ -78,16 +83,33 @@ export async function POST(req: NextRequest) {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+  const pathname = `shares/${id}.png`;
+  const putOptions = {
+    access: "public" as const,
+    contentType: "image/png",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    // Ephemeral share images — fine to let these expire; not critical
+    // long-term storage. (plan §6.2 — "don't worry about cleanup")
+    cacheControlMaxAge: 60 * 60 * 24 * 30,
+  };
+
   try {
-    const blob = await put(`shares/${id}.png`, bytes, {
-      access: "public",
-      contentType: "image/png",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      // Ephemeral share images — fine to let these expire; not critical
-      // long-term storage. (plan §6.2 — "don't worry about cleanup")
-      cacheControlMaxAge: 60 * 60 * 24 * 30,
-    });
+    let blob;
+    try {
+      blob = await put(pathname, bytes, putOptions);
+    } catch (err) {
+      // Some deployments still reject overwrites even with allowOverwrite.
+      // Delete the existing object and retry once so resharing the same
+      // Builder ID never hard-fails.
+      if (!isBlobAlreadyExistsError(err)) throw err;
+      try {
+        await del(pathname);
+      } catch (delErr) {
+        console.warn("Blob delete before overwrite failed:", delErr);
+      }
+      blob = await put(pathname, bytes, putOptions);
+    }
 
     const siteUrl = getSiteUrl();
     return NextResponse.json({
