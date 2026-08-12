@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#9AC95F"/>
+  <circle cx="640" cy="170" r="110" fill="#FEE101" stroke="#000" stroke-width="10"/>
+  <path d="M0 760 Q100 700 200 760 T400 760 T600 760 T800 760 V1000 H0Z" fill="#0B6839"/>
+  <path d="M0 810 Q100 750 200 810 T400 810 T600 810 T800 810" fill="none" stroke="#FFFBE8" stroke-width="16"/>
+  <path d="M120 550 Q140 300 260 180 M260 180 Q150 160 120 280 M260 180 Q330 130 380 230 M260 180 Q250 80 300 40" fill="none" stroke="#0B6839" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="400" cy="390" r="120" fill="#FFFBE8" stroke="#000" stroke-width="10"/>
+  <path d="M175 860 Q205 590 400 590 Q595 590 625 860" fill="#FFFBE8" stroke="#000" stroke-width="10"/>
+  <rect x="180" y="870" width="440" height="72" rx="24" fill="#FF0080" stroke="#000" stroke-width="8"/>
+  <text x="400" y="916" text-anchor="middle" font-family="monospace" font-size="28" font-weight="700" fill="#fff">NO IMAGE UPLOADED</text>
+</svg>

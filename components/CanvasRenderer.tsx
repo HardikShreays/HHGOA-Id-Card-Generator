@@ -4,115 +4,66 @@ import { useEffect, useRef, useState } from "react";
 import {
   drawFrame,
   drawIdCard,
-  drawBoardingPass,
   drawTeamFrame,
   type BuilderFields,
   type TeamFields,
 } from "@/lib/canvasCompose";
 import type { Format } from "@/lib/constants";
 
-export type RenderedResult = {
-  blob: Blob;
-  objectUrl: string;
+export type RenderedResult = { blob: Blob; objectUrl: string };
+
+type Props = {
+  format: Format;
+  croppedImageSrc?: string;
+  fields?: BuilderFields;
+  teamFields?: TeamFields;
+  onComplete: (result: RenderedResult) => void;
+  onError: (message: string) => void;
 };
 
-type Props =
-  | {
-      format: "pfp" | "card" | "boarding";
-      croppedImageSrc: string;
-      fields?: BuilderFields;
-      teamFields?: undefined;
-      onComplete: (result: RenderedResult) => void;
-      onError: (message: string) => void;
-    }
-  | {
-      format: "team";
-      croppedImageSrc?: undefined;
-      fields?: undefined;
-      teamFields: TeamFields;
-      onComplete: (result: RenderedResult) => void;
-      onError: (message: string) => void;
-    };
-
-const STATUS_LABEL: Record<Format, string> = {
-  pfp: "frame",
-  card: "builder pass",
-  boarding: "boarding pass",
-  team: "team frame",
-};
-
-/**
- * Runs the canvas compositor (drawFrame / drawIdCard / drawBoardingPass /
- * drawTeamFrame) against the cropped image(s) + fields, and reports the
- * result blob back up. Pure glue — all the actual compositing logic lives
- * in lib/canvasCompose.ts so it stays framework-agnostic and testable on
- * its own.
- */
 export default function CanvasRenderer(props: Props) {
-  const { format, onComplete, onError } = props;
-  const [status, setStatus] = useState<"rendering" | "done">("rendering");
-  // Monotonic id so a stale async render (StrictMode remount or rapid input
-  // changes) cannot call onComplete/onError after a newer render started.
-  const renderIdRef = useRef(0);
-
-  // Stable-ish dependency keys for the effect below.
-  const fieldsKey = props.format !== "team" ? `${props.fields?.name ?? ""}|${props.fields?.role ?? ""}|${props.fields?.teamName ?? ""}|${props.fields?.socials?.x ?? ""}|${props.fields?.socials?.github ?? ""}` : "";
-  const teamKey = props.format === "team" ? `${props.teamFields.teamName}|${props.teamFields.members.map((m) => `${m.name}:${m.role ?? ""}:${m.imageSrc}`).join(",")}` : "";
+  const renderId = useRef(0);
+  const [rendering, setRendering] = useState(true);
+  const fieldsKey = JSON.stringify(props.fields ?? props.teamFields ?? {});
 
   useEffect(() => {
-    const renderId = ++renderIdRef.current;
+    const id = ++renderId.current;
     let cancelled = false;
-    setStatus("rendering");
-
-    const run = async () => {
+    setRendering(true);
+    const timer = window.setTimeout(async () => {
       try {
         let blob: Blob;
-        if (props.format === "pfp") {
-          blob = await drawFrame(props.croppedImageSrc, props.fields);
-        } else if (props.format === "card") {
-          blob = await drawIdCard(props.croppedImageSrc, props.fields ?? { name: "", role: "" });
-        } else if (props.format === "boarding") {
-          blob = await drawBoardingPass(props.croppedImageSrc, props.fields ?? { name: "", role: "" });
-        } else if (props.format === "team") {
+        if (props.format === "team") {
+          if (!props.teamFields) return;
           blob = await drawTeamFrame(props.teamFields);
         } else {
-          throw new Error("Unknown format.");
+          if (!props.croppedImageSrc) return;
+          blob =
+            props.format === "pfp"
+              ? await drawFrame(props.croppedImageSrc, props.fields)
+              : await drawIdCard(props.croppedImageSrc, props.fields ?? { name: "", role: "" });
         }
-
-        if (cancelled || renderId !== renderIdRef.current) return;
-        const objectUrl = URL.createObjectURL(blob);
-        setStatus("done");
-        onComplete({ blob, objectUrl });
-      } catch (err) {
-        if (cancelled || renderId !== renderIdRef.current) return;
-        onError(
-          err instanceof Error
-            ? err.message
-            : "Something went wrong while generating your image. Please try again."
-        );
+        if (cancelled || id !== renderId.current) return;
+        props.onComplete({ blob, objectUrl: URL.createObjectURL(blob) });
+        setRendering(false);
+      } catch (error) {
+        if (cancelled || id !== renderId.current) return;
+        props.onError(error instanceof Error ? error.message : "Could not generate the preview.");
       }
-    };
+    }, 260);
 
-    run();
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
+    // Stable serialized keys intentionally drive live preview updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format, props.croppedImageSrc, fieldsKey, teamKey]);
+  }, [props.format, props.croppedImageSrc, fieldsKey]);
 
-  if (status === "rendering") {
-    return (
-      <div className="w-full max-w-md mx-auto flex flex-col items-center gap-3 py-16">
-        <div
-          className="h-8 w-8 rounded-full border-2 border-gold/20 border-t-gold animate-spin"
-          aria-hidden="true"
-        />
-        <p className="text-sm text-paper/50 font-[family-name:var(--font-body)]">
-          Compositing your {STATUS_LABEL[format]}…
-        </p>
-      </div>
-    );
-  }
-
-  return null;
+  if (!rendering) return null;
+  return (
+    <div className="absolute right-3 top-3 z-10 rounded-full border-2 border-black bg-gold px-3 py-1 text-[10px] font-bold text-ink">
+      Updating…
+    </div>
+  );
 }

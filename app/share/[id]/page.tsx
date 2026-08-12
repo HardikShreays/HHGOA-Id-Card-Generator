@@ -34,10 +34,10 @@ async function getShareImageUrl(id: string): Promise<string | null> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const imageUrl = (await getShareImageUrl(id)) ?? `${getSiteUrl()}/assets/og-default.png`;
+  const imageUrl = (await getShareImageUrl(id)) ?? `${getSiteUrl()}/brand/brand-mark.webp`;
 
   const title = `${BRAND.eventName} — Builder Frame`;
-  const description = `I just built mine at ${BRAND.eventName}. Make your Profile Frame, Builder Pass, Boarding Pass, or Team Frame in a few seconds — no sign-up.`;
+  const description = `I just built mine at ${BRAND.eventName}. Make your Profile Frame, Builder ID Card, or Team Frame in one place — no sign-up.`;
 
   return {
     title,
@@ -46,10 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: "website",
-      // No fixed width/height here — the stored image can be any of the 4
-      // format aspect ratios, and OG crawlers fetch the real image
-      // regardless, so a hardcoded hint would just be wrong most of the
-      // time.
+      // Stored images use one of the two generator aspect ratios.
       images: [{ url: imageUrl, alt: title }],
     },
     twitter: {
@@ -72,7 +69,7 @@ export default async function SharePage({ params }: Props) {
         <img
           src={imageUrl}
           alt="Shared HH Goa 2026 graphic"
-          className="max-h-[55vh] w-auto rounded-2xl border border-gold/25 shadow-lg shadow-black/40"
+          className="max-h-[55vh] w-auto rounded-2xl border-[3px] border-black shadow-[8px_8px_0_#000]"
         />
       ) : (
         <p className="text-sm text-paper/40 max-w-xs font-[family-name:var(--font-body)]">
@@ -88,14 +85,13 @@ export default async function SharePage({ params }: Props) {
           Thanks for sharing!
         </h1>
         <p className="text-paper/60 text-sm max-w-sm font-[family-name:var(--font-body)]">
-          Make your own Profile Frame, Builder Pass, Boarding Pass, or Team Frame in a few
-          seconds — no sign-up.
+          Make your own Profile Frame, Builder ID Card, or Team Frame in one place — no sign-up.
         </p>
       </div>
 
       <Link
         href="/"
-        className="min-h-[44px] inline-flex items-center px-8 rounded-xl bg-gold text-ink text-sm font-semibold hover:brightness-110 active:brightness-95 transition-all font-[family-name:var(--font-body)]"
+        className="brutal-button min-h-[44px] inline-flex items-center px-8 rounded-xl bg-gold text-ink text-sm font-bold"
       >
         Make your own {BRAND.hashtag}
       </Link>

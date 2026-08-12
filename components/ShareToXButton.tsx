@@ -10,7 +10,7 @@ type Props = {
   format: Format;
   /** Builder's name — used to personalize the tweet caption. */
   name?: string;
-  /** Card/PFP/Boarding only — lets the upload reuse the SAME id the QR code
+  /** Lets the upload reuse the same id the QR code
    *  on the Builder ID was rendered with (see lib/canvasCompose.ts
    *  drawIdCard), so scanning the QR resolves once shared. */
   fields?: BuilderFields;
@@ -63,25 +63,18 @@ export default function ShareToXButton({ blob, format, name, fields }: Props) {
         type="button"
         onClick={handleShare}
         disabled={isBusy}
-        className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl border border-gold/30 bg-forest-deep/40 text-paper text-sm font-semibold hover:bg-forest-deep/70 active:bg-forest-deep disabled:opacity-60 disabled:cursor-wait transition-colors inline-flex items-center justify-center gap-2 font-[family-name:var(--font-body)]"
+        className="brutal-button inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-coral px-8 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60 sm:w-auto"
       >
-        <XLogo />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/social-x.svg" alt="" className="h-5 w-5 object-contain" />
         {status === "uploading" ? "Preparing…" : "Share to X"}
       </button>
 
       {error && (
-        <p role="alert" className="text-xs text-coral text-center max-w-xs">
+        <p role="alert" className="max-w-xs text-center text-xs font-bold text-coral">
           {error}
         </p>
       )}
     </div>
-  );
-}
-
-function XLogo() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
   );
 }

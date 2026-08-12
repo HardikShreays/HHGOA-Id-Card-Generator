@@ -22,8 +22,8 @@ export const runtime = "nodejs";
 // (plan §6.2 point 4 — "keep exports under ~5MB").
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-function isAllowedFormat(value: string | null): value is "pfp" | "card" | "boarding" | "team" {
-  return value === "pfp" || value === "card" || value === "boarding" || value === "team";
+function isAllowedFormat(value: string | null): value is "pfp" | "card" | "team" {
+  return value === "pfp" || value === "card" || value === "team";
 }
 
 /** Deterministic Builder ID codes look like "HH-GOA-7F3A" — validate shape

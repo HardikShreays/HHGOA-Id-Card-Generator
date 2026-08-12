@@ -1,253 +1,221 @@
 "use client";
 
-import { useState } from "react";
-import UploadDropzone from "@/components/UploadDropzone";
-import FormatToggle from "@/components/FormatToggle";
-import CropStage from "@/components/CropStage";
-import BuilderFieldsForm from "@/components/BuilderFieldsForm";
-import TeamUploadFlow from "@/components/TeamUploadFlow";
-import CanvasRenderer, { type RenderedResult } from "@/components/CanvasRenderer";
-import ResultPanel from "@/components/ResultPanel";
-import type { BuilderFields, TeamFields } from "@/lib/canvasCompose";
-import { BRAND, FORMAT_CONFIG, type CroppedImage, type Format, type UploadedImage } from "@/lib/constants";
+import { useEffect, useRef, useState } from "react";
+import EditorWorkspace from "@/components/EditorWorkspace";
+import TeamEditor from "@/components/TeamEditor";
+import { BRAND, type Format } from "@/lib/constants";
 
-type Stage = "landing" | "upload" | "crop" | "fields" | "team" | "rendering" | "result";
+type Panel = "left" | "center" | "right";
+
+const SIGNS: Array<{
+  id: Format | "hype";
+  label: string;
+  side: Exclude<Panel, "center">;
+  className: string;
+}> = [
+  { id: "card", label: "MAKE ID CARD", side: "left", className: "left-[33.4%] top-[23.1%] w-[26.4%]" },
+  { id: "pfp", label: "MAKE PFP FRAME", side: "right", className: "left-[40.7%] top-[34.7%] w-[26.6%]" },
+  { id: "team", label: "MAKE TEAM FRAME", side: "left", className: "left-[33.4%] top-[46.2%] w-[26.4%]" },
+  { id: "hype", label: "CHECK HYPE", side: "right", className: "left-[40.7%] top-[57.8%] w-[26.6%]" },
+];
 
 export default function Home() {
-  const [format, setFormat] = useState<Format>("pfp");
-  const [stage, setStage] = useState<Stage>("landing");
-  const [image, setImage] = useState<UploadedImage | null>(null);
-  const [croppedImage, setCroppedImage] = useState<CroppedImage | null>(null);
-  const [fields, setFields] = useState<BuilderFields | undefined>(undefined);
-  const [teamFields, setTeamFields] = useState<TeamFields | null>(null);
-  const [rendered, setRendered] = useState<RenderedResult | null>(null);
-  const [renderError, setRenderError] = useState<string | null>(null);
+  const [format, setFormat] = useState<Format>("card");
+  const [panel, setPanel] = useState<Panel>("center");
+  const [signsVisible, setSignsVisible] = useState(false);
+  const signpostRef = useRef<HTMLElement>(null);
 
-  const resetAll = (nextStage: Stage = "landing") => {
-    if (image) URL.revokeObjectURL(image.objectUrl);
-    if (croppedImage) URL.revokeObjectURL(croppedImage.objectUrl);
-    if (rendered) URL.revokeObjectURL(rendered.objectUrl);
-    setImage(null);
-    setCroppedImage(null);
-    setFields(undefined);
-    setTeamFields(null);
-    setRendered(null);
-    setRenderError(null);
-    setStage(nextStage);
+  useEffect(() => {
+    const element = signpostRef.current;
+    if (!element) return;
+    let observer: IntersectionObserver | null = null;
+    const revealIfVisible = () => {
+      const rect = element.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
+        setSignsVisible(true);
+        observer?.disconnect();
+        window.removeEventListener("scroll", revealIfVisible);
+      }
+    };
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(revealIfVisible, { threshold: 0.01 });
+      observer.observe(element);
+    }
+    window.addEventListener("scroll", revealIfVisible, { passive: true });
+    revealIfVisible();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("scroll", revealIfVisible);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (panel === "center") return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [panel]);
+
+  const openEditor = (nextFormat: Format, side: Exclude<Panel, "center">) => {
+    setFormat(nextFormat);
+    setPanel(side);
   };
 
-  const handlePickFormat = (next: Format) => {
-    setFormat(next);
-    resetAll(next === "team" ? "team" : "upload");
+  const closeEditor = () => {
+    setPanel("center");
+    window.history.replaceState(null, "", "#signpost");
   };
-
-  const handleFormatToggleChange = (next: Format) => {
-    setFormat(next);
-    // Aspect ratio (and text fields) differ per format, so anything past
-    // upload is no longer valid — start that format's flow fresh.
-    resetAll(next === "team" ? "team" : "upload");
-  };
-
-  const handleImageReady = (img: UploadedImage) => {
-    setImage(img);
-    setStage("crop");
-  };
-
-  const handleCropComplete = (cropped: CroppedImage) => {
-    if (croppedImage) URL.revokeObjectURL(croppedImage.objectUrl);
-    setCroppedImage(cropped);
-    setStage("fields");
-  };
-
-  const handleFieldsSubmit = (submitted: BuilderFields) => {
-    setFields(submitted);
-    setStage("rendering");
-  };
-
-  const handleTeamComplete = (submitted: TeamFields) => {
-    setTeamFields(submitted);
-    setStage("rendering");
-  };
-
-  const handleRenderComplete = (result: RenderedResult) => {
-    if (rendered) URL.revokeObjectURL(rendered.objectUrl);
-    setRendered(result);
-    setRenderError(null);
-    setStage("result");
-  };
-
-  const handleRenderError = (message: string) => {
-    setRenderError(message);
-    setStage("result");
-  };
+  const trackTransform =
+    panel === "left" ? "translateX(100%)" : panel === "right" ? "translateX(-100%)" : "translateX(0)";
 
   return (
-    <div className="min-h-screen bg-forest flex flex-col items-center px-4 py-10 sm:py-16">
-      <header className="text-center mb-8 flex flex-col items-center gap-5 max-w-2xl">
-        <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-forest-deep/50 px-4 py-1.5">
-          <span className="text-gold text-xs font-semibold tracking-wide uppercase font-[family-name:var(--font-mono-brand)]">
-            {BRAND.location} · {BRAND.dateRange}
-          </span>
-        </div>
+    <main className="overflow-x-hidden bg-forest text-paper">
+      <Hero />
 
-        <div>
-          <h1 className="flex flex-col items-center gap-1">
-            <span className="text-3xl sm:text-5xl font-black text-paper font-[family-name:var(--font-display)]">
-              {BRAND.eventName}
-            </span>
-            <span className="text-2xl sm:text-3xl text-gold font-bold font-[family-name:var(--font-devanagari)]">
-              {BRAND.eventNameDevanagari}
-            </span>
-          </h1>
-          <p className="text-paper/60 text-sm sm:text-base mt-3 font-[family-name:var(--font-body)]">
-            {BRAND.tagline}
-          </p>
-        </div>
-
-        {stage !== "landing" && (
-          <button
-            type="button"
-            onClick={() => resetAll("landing")}
-            className="text-xs text-paper/50 hover:text-paper underline underline-offset-4 font-[family-name:var(--font-body)]"
+      <section
+        ref={signpostRef}
+        id="signpost"
+        className={`overflow-hidden bg-forest ${
+          panel === "center"
+            ? "relative h-[65.07vw] min-h-0 lg:h-screen lg:h-[100svh] lg:min-h-[620px]"
+            : "fixed inset-0 z-50 h-screen h-[100svh]"
+        }`}
+      >
+        <div className="panel-track absolute inset-0" style={{ transform: trackTransform }}>
+          <section
+            className={`generator-panel absolute inset-0 overflow-y-auto bg-forest ${
+              panel === "left" ? "visible pointer-events-auto" : "invisible pointer-events-none"
+            }`}
+            style={{ transform: "translateX(-100%)" }}
           >
-            ← Choose a different format
-          </button>
-        )}
-
-        {stage !== "landing" && (
-          <FormatToggle
-            value={format}
-            onChange={handleFormatToggleChange}
-            disabled={stage === "rendering"}
-          />
-        )}
-      </header>
-
-      <main className="w-full flex-1 flex flex-col items-center">
-        {stage === "landing" && <FormatPicker onPick={handlePickFormat} />}
-
-        {stage === "upload" && <UploadDropzone onImageReady={handleImageReady} />}
-
-        {stage === "crop" && image && (
-          <CropStage
-            imageSrc={image.objectUrl}
-            format={format}
-            onCancel={() => setStage("upload")}
-            onComplete={handleCropComplete}
-          />
-        )}
-
-        {stage === "fields" && (
-          <BuilderFieldsForm
-            initial={fields}
-            showTeamName={format !== "team"}
-            onCancel={() => setStage("crop")}
-            onSubmit={handleFieldsSubmit}
-          />
-        )}
-
-        {stage === "team" && (
-          <TeamUploadFlow onCancel={() => resetAll("landing")} onComplete={handleTeamComplete} />
-        )}
-
-        {stage === "rendering" && format !== "team" && croppedImage && (
-          <CanvasRenderer
-            format={format}
-            croppedImageSrc={croppedImage.objectUrl}
-            fields={fields}
-            onComplete={handleRenderComplete}
-            onError={handleRenderError}
-          />
-        )}
-
-        {stage === "rendering" && format === "team" && teamFields && (
-          <CanvasRenderer
-            format="team"
-            teamFields={teamFields}
-            onComplete={handleRenderComplete}
-            onError={handleRenderError}
-          />
-        )}
-
-        {stage === "result" && (
-          <>
-            {renderError && (
-              <div className="w-full max-w-md mx-auto flex flex-col items-center gap-3 text-center">
-                <p role="alert" className="text-sm text-coral font-[family-name:var(--font-body)]">
-                  {renderError}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setStage("rendering")}
-                  className="min-h-[44px] px-6 rounded-xl bg-gold text-ink text-sm font-semibold hover:brightness-110 transition-all font-[family-name:var(--font-body)]"
-                >
-                  Try again
-                </button>
-              </div>
+            {panel === "left" && (
+              <EditorChrome onBack={closeEditor}>
+                {format === "team" ? <TeamEditor /> : <EditorWorkspace format="card" />}
+              </EditorChrome>
             )}
+          </section>
 
-            {!renderError && rendered && (
-              <ResultPanel
-                format={format}
-                rendered={rendered}
-                name={format === "team" ? teamFields?.teamName : fields?.name}
-                fields={format === "team" ? undefined : fields}
-                onEditFields={format === "team" ? () => setStage("team") : () => setStage("fields")}
-                onAdjustCrop={format === "team" ? undefined : () => setStage("crop")}
-                onNewPhoto={format === "team" ? undefined : () => resetAll("upload")}
-              />
+          <Signboard onPick={openEditor} signsVisible={signsVisible} interactive={panel === "center"} />
+
+          <section
+            className={`generator-panel absolute inset-0 overflow-y-auto bg-forest ${
+              panel === "right" ? "visible pointer-events-auto" : "invisible pointer-events-none"
+            }`}
+            style={{ transform: "translateX(100%)" }}
+          >
+            {panel === "right" && (
+              <EditorChrome onBack={closeEditor}>
+                <EditorWorkspace format="pfp" />
+              </EditorChrome>
             )}
-          </>
-        )}
-      </main>
-
-      <footer className="mt-16 flex flex-col items-center gap-2 text-center">
-        <p className="text-xs text-paper/40 font-[family-name:var(--font-mono-brand)]">
-          {BRAND.hashtag} · {BRAND.studioCredit}
-        </p>
-        <a
-          href="https://hhgoa.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-paper/30 hover:text-paper/60 underline underline-offset-4"
-        >
-          hhgoa.com
-        </a>
-      </footer>
-    </div>
+          </section>
+        </div>
+      </section>
+    </main>
   );
 }
 
-function FormatPicker({ onPick }: { onPick: (format: Format) => void }) {
-  const formats: Format[] = ["pfp", "card", "boarding", "team"];
+function Hero() {
   return (
-    <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {formats.map((f) => {
-        const config = FORMAT_CONFIG[f];
-        return (
-          <button
-            key={f}
-            type="button"
-            onClick={() => onPick(f)}
-            className="group flex flex-col items-start gap-2 rounded-2xl border border-gold/20 bg-forest-deep/40 p-5 text-left hover:border-gold/50 hover:bg-forest-deep/70 transition-all"
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-lg font-bold text-paper font-[family-name:var(--font-display)]">
-                {config.label}
-              </span>
-              <span className="text-xs text-gold font-[family-name:var(--font-mono-brand)]">
-                {config.outputDims}
-              </span>
+    <section className="relative flex h-screen h-[100svh] min-h-[620px] flex-col items-center justify-center overflow-hidden border-b-[3px] border-black bg-forest px-5 text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/sunrise.png" alt="" className="hero-parallax absolute inset-x-0 bottom-0 h-[62%] w-full object-cover object-bottom opacity-50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-forest via-forest/95 to-forest/25" />
+      <nav className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-start justify-between px-6 py-7 sm:px-14 sm:py-10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/studio-247.svg" alt="2:47 PM Studio" className="h-auto w-24 sm:w-32" />
+        <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/hacker-house.png" alt="Hacker House" className="h-auto w-36 sm:w-64" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/goa-hindi.svg" alt="Goa" className="float-slow h-6 w-6 sm:h-10 sm:w-10" />
+          </div>
+        </div>
+      </nav>
+
+      <div className="relative z-10 mt-20 flex flex-col items-center sm:mt-16">
+      <p className="hero-reveal text-[9px] font-bold uppercase tracking-[.28em] text-gold sm:text-sm">{BRAND.location} · {BRAND.dateRange}</p>
+      <h1 className="hero-reveal mt-5 font-[family-name:var(--font-display)] text-[clamp(3.8rem,12vw,8.25rem)] font-bold leading-[.94] tracking-[-.02em]">
+        BUILD IN<br />THE SUN
+      </h1>
+      <p className="hero-reveal mt-6 max-w-2xl text-[11px] font-semibold leading-relaxed sm:text-base">
+        Less noise. More signal. <br />
+        Make your HH Goa identity and ship it into the timeline.
+      </p>
+      <a href="#signpost" className="direction-cta brutal-button mt-8 rounded-full bg-gold px-7 py-3 text-xs font-bold text-ink sm:mt-10 sm:px-8 sm:py-4 sm:text-base">
+        PICK YOUR DIRECTION ↓
+      </a>
+      </div>
+      <div className="absolute inset-x-0 bottom-0">
+        <div className="brand-ticker h-5 border-y-[3px] border-black" aria-hidden="true" />
+      </div>
+    </section>
+  );
+}
+
+function Signboard({ onPick, signsVisible, interactive }: { onPick: (format: Format, side: "left" | "right") => void; signsVisible: boolean; interactive: boolean }) {
+  return (
+    <section className={`generator-panel signboard-reveal absolute inset-0 flex items-center justify-center overflow-hidden bg-forest ${interactive ? "pointer-events-auto" : "pointer-events-none"}`}>
+      <div className="signboard-art relative aspect-[1440/937] w-full max-w-[1440px] shrink-0 lg:h-full lg:max-h-full lg:w-auto">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/details.png" alt="Goa beach signpost with four directions" className="pointer-events-none absolute inset-0 h-full w-full object-contain" />
+
+        <div className="absolute left-1/2 top-[6%] z-20 w-max max-w-[90%] -translate-x-1/2 text-center">
+          <p className="signboard-title font-[family-name:var(--font-display)] font-bold leading-none text-gold">
+            CHOOSE WHERE YOU&apos;RE HEADED
+          </p>
+          <p className="signboard-subtitle font-bold uppercase text-paper">Four signs. Three ways to frame the signal.</p>
+        </div>
+
+        {SIGNS.map((sign, index) => {
+          const wrapperClass = `sign-reveal sign-wobble-${index % 2} absolute z-10 h-[8.8%] ${signsVisible ? "is-visible" : ""} ${sign.className}`;
+          const className = "sign-hotspot flex h-full w-full touch-manipulation items-center justify-center px-[2%] text-center font-[family-name:var(--font-display)] font-bold leading-none text-ink";
+          const pickSign = () => onPick(sign.id as Format, sign.side);
+          if (sign.id === "hype") {
+            return <div key={sign.id} className={wrapperClass} style={{ transitionDelay: `${index * 110}ms` }}><a href="https://hhgoa.com" className={className}>{sign.label} ↗</a></div>;
+          }
+          return (
+            <div key={sign.id} className={wrapperClass} style={{ transitionDelay: `${index * 110}ms` }}>
+              <a
+                href={`/make/${sign.id}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  pickSign();
+                }}
+                className={className}
+              >
+                {sign.label}
+              </a>
             </div>
-            <p className="text-sm text-paper/60 font-[family-name:var(--font-body)]">
-              {config.description}
-            </p>
-            <span className="mt-2 text-xs text-gold/80 group-hover:text-gold font-semibold font-[family-name:var(--font-body)]">
-              Start →
-            </span>
-          </button>
-        );
-      })}
+          );
+        })}
+
+        <div className="signboard-footer absolute bottom-[1.35%] left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-full bg-parchment text-center font-bold text-ink">
+          LIVE PREVIEW · DOWNLOAD · SHARE TO X
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EditorChrome({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
+  return (
+    <div className="relative min-h-full pb-20">
+      <header className="sticky top-0 z-30 border-b-[3px] border-black bg-forest-deep/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-7">
+          <button type="button" onClick={onBack} className="brutal-button min-h-10 rounded-full bg-gold px-4 text-[10px] font-bold text-ink">← Back to signs</button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/hacker-house.png" alt="Hacker House" className="h-auto w-36 sm:w-48" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/goa-hindi.svg" alt="Goa" className="h-10 w-10" />
+        </div>
+      </header>
+      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-7">{children}</div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/palm-divider.svg" alt="" className="absolute inset-x-0 bottom-0 h-14 w-full object-cover opacity-55" />
     </div>
   );
 }

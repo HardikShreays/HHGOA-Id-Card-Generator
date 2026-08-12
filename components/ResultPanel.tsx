@@ -17,6 +17,7 @@ type Props = {
   onEditFields?: () => void;
   onAdjustCrop?: () => void;
   onNewPhoto?: () => void;
+  actionsEnabled?: boolean;
 };
 
 /**
@@ -51,25 +52,47 @@ function triggerDownload(blob: Blob, filename: string) {
 const FILENAMES: Record<Format, string> = {
   pfp: "hh-goa-2026-frame.png",
   card: "hh-goa-2026-builder-pass.png",
-  boarding: "hh-goa-2026-boarding-pass.png",
   team: "hh-goa-2026-team-frame.png",
 };
 
 const ALT_TEXT: Record<Format, string> = {
   pfp: "Your HH Goa 2026 profile frame",
   card: "Your HH Goa 2026 builder pass",
-  boarding: "Your HH Goa 2026 boarding pass",
   team: "Your HH Goa 2026 team frame",
 };
 
 const EDIT_LABEL: Record<Format, string> = {
   pfp: "Edit details",
   card: "Edit details",
-  boarding: "Edit details",
   team: "Edit team",
 };
 
-export default function ResultPanel({ format, rendered, name, fields, onEditFields, onAdjustCrop, onNewPhoto }: Props) {
+export default function ResultPanel({
+  format,
+  rendered,
+}: Pick<Props, "format" | "rendered">) {
+  return (
+    <div className="flex w-full justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={rendered.objectUrl}
+        alt={ALT_TEXT[format]}
+        className="max-h-[65vh] w-auto rounded-xl border-[3px] border-black shadow-[8px_8px_0_#000]"
+      />
+    </div>
+  );
+}
+
+export function ResultActions({
+  format,
+  rendered,
+  name,
+  fields,
+  onEditFields,
+  onAdjustCrop,
+  onNewPhoto,
+  actionsEnabled = true,
+}: Props) {
   const [showIOSHint, setShowIOSHint] = useState(false);
   const onIOS = useMemo(isIOS, []);
 
@@ -88,30 +111,32 @@ export default function ResultPanel({ format, rendered, name, fields, onEditFiel
   };
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center gap-4">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={rendered.objectUrl}
-        alt={ALT_TEXT[format]}
-        className="max-h-[65vh] w-auto rounded-xl border border-gold/25 shadow-lg shadow-black/40"
-      />
-
+    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4">
       <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3">
         <button
           type="button"
           onClick={handleDownload}
-          className="min-h-[44px] w-full sm:w-auto px-8 rounded-xl bg-gold text-ink text-sm font-semibold hover:brightness-110 active:brightness-95 transition-all font-[family-name:var(--font-body)]"
+          disabled={!actionsEnabled}
+          className="brutal-button pulse-glow min-h-[44px] w-full rounded-xl bg-gold px-8 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
         >
           Download PNG
         </button>
 
-        <ShareToXButton blob={rendered.blob} format={format} name={name} fields={fields} />
+        {actionsEnabled ? (
+          <ShareToXButton blob={rendered.blob} format={format} name={name} fields={fields} />
+        ) : (
+          <button type="button" disabled className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-coral px-8 text-sm font-bold text-white opacity-45 sm:w-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/social-x.svg" alt="" className="h-5 w-5 object-contain" />
+            Share to X
+          </button>
+        )}
       </div>
 
       {(onIOS || showIOSHint) && (
-        <p className="text-xs text-paper/50 text-center max-w-xs font-[family-name:var(--font-body)]" role="status">
+        <p className="max-w-xs text-center text-xs text-ink/60" role="status">
           Opened in a new tab — press and hold the image, then choose{" "}
-          <span className="text-paper/70">&ldquo;Save Image&rdquo;</span> to add it to your Photos.
+          <span className="font-bold text-ink">&ldquo;Save Image&rdquo;</span> to add it to your Photos.
         </p>
       )}
 
@@ -120,7 +145,7 @@ export default function ResultPanel({ format, rendered, name, fields, onEditFiel
           <button
             type="button"
             onClick={onEditFields}
-            className="min-h-[44px] text-sm text-paper/70 underline underline-offset-4 hover:text-paper font-[family-name:var(--font-body)]"
+            className="min-h-[44px] text-xs font-bold text-forest underline decoration-2 underline-offset-4"
           >
             {EDIT_LABEL[format]}
           </button>
@@ -129,7 +154,7 @@ export default function ResultPanel({ format, rendered, name, fields, onEditFiel
           <button
             type="button"
             onClick={onAdjustCrop}
-            className="min-h-[44px] text-sm text-paper/70 underline underline-offset-4 hover:text-paper font-[family-name:var(--font-body)]"
+            className="min-h-[44px] text-xs font-bold text-forest underline decoration-2 underline-offset-4"
           >
             Adjust crop
           </button>
@@ -138,7 +163,7 @@ export default function ResultPanel({ format, rendered, name, fields, onEditFiel
           <button
             type="button"
             onClick={onNewPhoto}
-            className="min-h-[44px] text-sm text-paper/70 underline underline-offset-4 hover:text-paper font-[family-name:var(--font-body)]"
+            className="min-h-[44px] text-xs font-bold text-forest underline decoration-2 underline-offset-4"
           >
             Use a different photo
           </button>

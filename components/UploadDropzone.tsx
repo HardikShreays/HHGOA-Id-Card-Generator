@@ -1,32 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { isHeicFile, convertHeicToJpeg, HeicConversionError } from "@/lib/heicConvert";
 import { validateUploadFile, loadAndDownscale } from "@/lib/imageProcessing";
 import type { UploadedImage } from "@/lib/constants";
 
 type Props = {
   onImageReady: (image: UploadedImage) => void;
+  compact?: boolean;
 };
 
 type Status = "idle" | "converting" | "processing" | "error";
 
-export default function UploadDropzone({ onImageReady }: Props) {
+export default function UploadDropzone({ onImageReady, compact = false }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [showSourcePicker, setShowSourcePicker] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(pointer: coarse)");
-    setIsTouchDevice(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -100,172 +89,59 @@ export default function UploadDropzone({ onImageReady }: Props) {
 
   const isBusy = status === "converting" || status === "processing";
 
-  const openPicker = () => {
-    if (isBusy) return;
-    if (isTouchDevice) {
-      setShowSourcePicker(true);
-    } else {
-      galleryInputRef.current?.click();
-    }
-  };
-
-  const pickFromGallery = () => {
-    setShowSourcePicker(false);
-    galleryInputRef.current?.click();
-  };
-
-  const pickFromCamera = () => {
-    setShowSourcePicker(false);
-    cameraInputRef.current?.click();
-  };
-
   return (
     <div className="w-full max-w-md mx-auto">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onClick={openPicker}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !isBusy) {
-            e.preventDefault();
-            openPicker();
-          }
-        }}
         className={[
-          "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors cursor-pointer select-none",
-          "min-h-[220px]", // comfortably >44px tap target, generous on mobile
-          isDragOver ? "border-gold bg-forest-deep/40" : "border-gold/30 hover:border-gold/50",
+          "relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border-[3px] border-dashed border-black text-center transition-colors cursor-pointer select-none",
+          compact ? "min-h-[72px] p-3" : "min-h-[220px] p-8",
+          isDragOver ? "bg-gold" : "bg-white hover:bg-gold/20",
           isBusy ? "cursor-wait opacity-70" : "",
         ].join(" ")}
       >
         <input
-          ref={galleryInputRef}
           type="file"
           accept="image/*,.heic,.heif"
           onChange={handleInputChange}
-          className="hidden"
+          disabled={isBusy}
+          className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0 disabled:cursor-wait"
           aria-label="Choose a photo from your library"
-        />
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleInputChange}
-          className="hidden"
-          aria-label="Take a photo with your camera"
         />
 
         {status === "converting" && (
           <>
             <Spinner />
-            <p className="text-sm text-paper/80">Converting your iPhone photo…</p>
+            <p className="text-sm text-ink/80">Converting your iPhone photo…</p>
           </>
         )}
 
         {status === "processing" && (
           <>
             <Spinner />
-            <p className="text-sm text-paper/80">Preparing your photo…</p>
+            <p className="text-sm text-ink/80">Preparing your photo…</p>
           </>
         )}
 
         {!isBusy && (
           <>
-            <UploadIcon />
-            <p className="text-base font-medium text-paper">
-              Tap to upload, or drag a photo here
+            {!compact && <UploadIcon />}
+            <p className={`${compact ? "text-[10px]" : "text-sm"} font-bold text-ink`}>
+              {compact ? "Replace photo" : "Tap to upload, or drag a photo here"}
             </p>
-            <p className="text-xs text-paper/50">JPG, PNG, or HEIC · up to 15MB</p>
+            {!compact && <p className="text-xs text-ink/55">JPG, PNG, or HEIC · up to 15MB</p>}
           </>
         )}
       </div>
 
       {status === "error" && error && (
-        <p role="alert" className="mt-3 text-sm text-coral text-center">
+        <p role="alert" className="mt-3 text-sm font-bold text-coral text-center">
           {error}
         </p>
       )}
-
-      {showSourcePicker && (
-        <SourcePickerSheet
-          onGallery={pickFromGallery}
-          onCamera={pickFromCamera}
-          onDismiss={() => setShowSourcePicker(false)}
-        />
-      )}
     </div>
-  );
-}
-
-function SourcePickerSheet({
-  onGallery,
-  onCamera,
-  onDismiss,
-}: {
-  onGallery: () => void;
-  onCamera: () => void;
-  onDismiss: () => void;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4"
-      onClick={onDismiss}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Choose photo source"
-    >
-      <div
-        className="w-full max-w-md rounded-2xl border border-gold/20 bg-forest-deep p-2 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={onCamera}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-gold/10 active:bg-gold/15"
-        >
-          <CameraIcon />
-          <span className="text-base font-medium">Take a photo</span>
-        </button>
-        <button
-          type="button"
-          onClick={onGallery}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-paper hover:bg-gold/10 active:bg-gold/15"
-        >
-          <GalleryIcon />
-          <span className="text-base font-medium">Choose from library</span>
-        </button>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="mt-1 w-full rounded-xl px-4 py-3.5 text-center text-sm text-paper/60 hover:bg-gold/5 active:bg-gold/10"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function CameraIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  );
-}
-
-function GalleryIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
-    </svg>
   );
 }
 
@@ -287,7 +163,7 @@ function UploadIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.75"
-      className="text-paper/70"
+      className="text-forest"
       aria-hidden="true"
     >
       <path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />

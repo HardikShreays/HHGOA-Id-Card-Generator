@@ -1,102 +1,303 @@
 @import "tailwindcss";
 
-/* Self-hosted brand fonts (plan §2). Loaded from public/fonts — no runtime
-   Google Fonts dependency, no FOUC risk once lib/canvasCompose.ts's
-   ensureFontsLoaded() awaits document.fonts.ready before drawing on
-   canvas. Fixed family names here MUST match the strings used in
-   lib/constants.ts's BRAND.fonts and in canvasCompose.ts's FONT_STACK. */
 @font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/Fraunces-Variable.ttf") format("truetype-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  src: url("/fonts/JetBrainsMono-Variable.ttf") format("truetype-variations");
-  font-weight: 100 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Sans Devanagari";
-  src: url("/fonts/NotoSansDevanagari-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Sans Devanagari";
-  src: url("/fonts/NotoSansDevanagari-Bold.ttf") format("truetype");
+  font-family: "Imbue";
+  src: url("/fonts/Imbue-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Medium.ttf") format("truetype");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-SemiBold.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Bold.ttf") format("truetype");
-  font-weight: 700;
+  font-family: "Victor Mono";
+  src: url("/fonts/VictorMono-Variable.woff2") format("woff2");
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b6839;
+  --foreground: #fffbe8;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #fee101 #0b6839;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b6839;
+  border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+  min-height: 52px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fee101;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff0080;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  /* Brand tokens — MUST mirror lib/constants.ts BRAND.colors */
-  --color-forest: #0B3D2E;
-  --color-forest-deep: #062A20;
-  --color-parchment: #F6ECD9;
-  --color-gold: #E8B923;
-  --color-coral: #E85D75;
-  --color-ink: #12241C;
-  --color-paper: #FFF9EE;
-
-  --font-display: "Fraunces", "Poppins", serif;
-  --font-devanagari: "Noto Sans Devanagari", "Poppins", sans-serif;
-  --font-mono-brand: "JetBrains Mono", "IBM Plex Mono", monospace;
-  --font-body: "Poppins", "Inter", system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: "Victor Mono", ui-monospace, monospace;
+  --font-mono: "Victor Mono", ui-monospace, monospace;
+  --color-forest: #0b6839;
+  --color-forest-deep: #07502c;
+  --color-parchment: #fffbe8;
+  --color-gold: #fee101;
+  --color-coral: #ff0080;
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-leaf: #9ac95f;
+  --font-display: "Imbue", Georgia, serif;
+  --font-devanagari: "Victor Mono", ui-monospace, monospace;
+  --font-mono-brand: "Victor Mono", ui-monospace, monospace;
+  --font-body: "Victor Mono", ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Poppins", "Inter", system-ui, sans-serif;
+  font-family: "Victor Mono", ui-monospace, monospace;
+  overflow-x: hidden;
+}
+
+::selection {
+  color: #000;
+  background: #fee101;
+}
+
+:focus-visible {
+  outline: 3px solid #fee101;
+  outline-offset: 3px;
+}
+
+.brutal-card {
+  border: 3px solid #000;
+  border-radius: 18px;
+  box-shadow: 8px 8px 0 #000;
+}
+
+.brutal-button {
+  border: 2px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+}
+
+.brutal-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #000;
+}
+
+.brutal-button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.brand-ticker {
+  background-color: #fee101;
+  background-image: url("/brand/ticker.svg");
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: 102px 7px;
+}
+
+.stage-enter {
+  animation: fadeInUp 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.float-slow {
+  animation: float 5s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.signboard-art {
+  container-type: inline-size;
+}
+
+.signboard-title {
+  font-size: 4.5vw;
+  font-size: 4.5cqw;
+  text-shadow: .22vw .22vw 0 #000;
+  text-shadow: .22cqw .22cqw 0 #000;
+}
+
+.signboard-subtitle {
+  margin-top: .35vw;
+  margin-top: .35cqw;
+  font-size: 1.15vw;
+  font-size: 1.15cqw;
+  letter-spacing: .2em;
+}
+
+.sign-hotspot {
+  cursor: pointer;
+  font-size: 2vw;
+  font-size: 2cqw;
+  text-shadow: .08vw .08vw 0 rgba(255,255,255,.35);
+  text-shadow: .08cqw .08cqw 0 rgba(255,255,255,.35);
+  transition: transform 120ms ease-out, filter 120ms ease-out;
+}
+
+.signboard-footer {
+  border: .2vw solid #000;
+  border: .2cqw solid #000;
+  padding: .75vw 1.45vw;
+  padding: .75cqw 1.45cqw;
+  font-size: 1.15vw;
+  font-size: 1.15cqw;
+  box-shadow: .38vw .38vw 0 #000;
+  box-shadow: .38cqw .38cqw 0 #000;
+}
+
+.sign-hotspot:hover,
+.sign-hotspot:focus-visible {
+  transform: scale(1.045);
+  filter: brightness(1.08);
+}
+
+.scene-enter { animation: sceneEnter 420ms ease-out both; }
+.scene-exit-left { animation: sceneExitLeft 360ms ease-in both; }
+.scene-exit-right { animation: sceneExitRight 360ms ease-in both; }
+.editor-in-left { animation: editorInLeft 440ms cubic-bezier(.2,.8,.2,1) both; }
+.editor-in-right { animation: editorInRight 440ms cubic-bezier(.2,.8,.2,1) both; }
+
+.panel-track {
+  transition: transform 720ms cubic-bezier(.22,.8,.22,1);
+}
+
+.hero-parallax {
+  animation: heroDrift 14s ease-in-out infinite alternate;
+}
+
+.hero-reveal {
+  animation: fadeInUp 700ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.hero-reveal:nth-of-type(2) { animation-delay: 120ms; }
+.hero-reveal:nth-of-type(3) { animation-delay: 220ms; }
+
+.signboard-reveal {
+  animation: sceneEnter 650ms ease-out both;
+  animation-timeline: view();
+  animation-range: entry 10% cover 40%;
+}
+
+.sign-wobble-0 { animation: signWobbleLeft 4.8s ease-in-out infinite; }
+.sign-wobble-1 { animation: signWobbleRight 5.2s ease-in-out infinite; }
+
+.sign-reveal {
+  opacity: 0;
+  transform: translateY(-28px) scale(.88);
+  transition: opacity 520ms ease-out, transform 650ms cubic-bezier(.2,.85,.2,1);
+}
+
+.sign-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.direction-cta {
+  animation: directionPrompt 2.2s ease-in-out infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(254,225,1,0)); }
+  50% { filter: drop-shadow(0 0 18px rgba(254,225,1,.55)); }
+}
+
+@keyframes sceneEnter {
+  from { opacity: 0; transform: scale(.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sceneExitLeft {
+  to { opacity: 0; transform: translateX(-18%); }
+}
+
+@keyframes sceneExitRight {
+  to { opacity: 0; transform: translateX(18%); }
+}
+
+@keyframes editorInLeft {
+  from { opacity: 0; transform: translateX(-12%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes editorInRight {
+  from { opacity: 0; transform: translateX(12%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes heroDrift {
+  from { transform: scale(1.02) translateY(0); }
+  to { transform: scale(1.07) translateY(-1.5%); }
+}
+
+@keyframes signWobbleLeft {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: -.7deg; }
+}
+
+@keyframes signWobbleRight {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: .7deg; }
+}
+
+@keyframes directionPrompt {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(254,225,1,0));
+  }
+  50% {
+    transform: translateY(7px);
+    filter: drop-shadow(0 0 18px rgba(254,225,1,.6));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (pointer: coarse), (max-width: 639px) {
+  .sign-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .sign-hotspot:hover,
+  .sign-hotspot:focus-visible {
+    transform: none;
+    filter: none;
+  }
 }

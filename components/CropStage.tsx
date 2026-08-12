@@ -1,52 +1,78 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import { getCroppedImage } from "@/lib/cropImage";
+import { detectFaceFocalPoint } from "@/lib/faceDetection";
 import { FORMAT_CONFIG, type CroppedImage, type Format } from "@/lib/constants";
 
 type Props = {
   imageSrc: string;
   format: Format;
-  onCancel: () => void;
-  onComplete: (cropped: CroppedImage) => void;
+  onChange: (cropped: CroppedImage) => void;
+  compact?: boolean;
 };
 
-export default function CropStage({ imageSrc, format, onCancel, onComplete }: Props) {
+export default function CropStage({ imageSrc, format, onChange, compact = false }: Props) {
   const config = FORMAT_CONFIG[format];
-
-  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [crop, setCrop] = useState<Point>({ x: 0, y: -8 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [area, setArea] = useState<Area | null>(null);
+  const [faceStatus, setFaceStatus] = useState<"looking" | "found" | "fallback">("looking");
+  const lastUrl = useRef<string | null>(null);
 
-  // react-easy-crop starts centered with a "cover" fit at zoom=1, so a user
-  // who hits Continue without touching anything already gets a sane crop
-  // (plan §4 Phase 2 step 3 — the tool does the initial smart crop).
-  const handleCropComplete = useCallback((_area: Area, areaPixels: Area) => {
-    setCroppedAreaPixels(areaPixels);
-  }, []);
+  useEffect(() => {
+    let active = true;
+    setFaceStatus("looking");
+    detectFaceFocalPoint(imageSrc).then((point) => {
+      if (!active) return;
+      setCrop({
+        x: Math.round((0.5 - point.x) * 120),
+        y: Math.round((0.42 - point.y) * 120),
+      });
+      setFaceStatus(point.detected ? "found" : "fallback");
+    });
+    return () => {
+      active = false;
+    };
+  }, [imageSrc]);
 
-  const handleContinue = useCallback(async () => {
-    if (!croppedAreaPixels) return;
-    setIsExporting(true);
-    setError(null);
-    try {
-      const cropped = await getCroppedImage(imageSrc, croppedAreaPixels, config.maxOutputEdge);
-      onComplete(cropped);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Couldn't process that crop. Please try again."
-      );
-      setIsExporting(false);
-    }
-  }, [imageSrc, croppedAreaPixels, config.maxOutputEdge, onComplete]);
+  const handleCropComplete = useCallback((_area: Area, pixels: Area) => setArea(pixels), []);
+
+  useEffect(() => {
+    if (!area) return;
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      try {
+        const next = await getCroppedImage(imageSrc, area, config.maxOutputEdge);
+        if (!active) {
+          URL.revokeObjectURL(next.objectUrl);
+          return;
+        }
+        if (lastUrl.current) URL.revokeObjectURL(lastUrl.current);
+        lastUrl.current = next.objectUrl;
+        onChange(next);
+      } catch {
+        // Keep the last valid preview while the user continues adjusting.
+      }
+    }, 320);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [area, config.maxOutputEdge, imageSrc, onChange]);
+
+  useEffect(
+    () => () => {
+      if (lastUrl.current) URL.revokeObjectURL(lastUrl.current);
+    },
+    []
+  );
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center gap-4">
-      <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-black/40 border border-gold/20">
+    <div className="flex w-full flex-col gap-3">
+      <div className={`relative w-full overflow-hidden rounded-xl border-[3px] border-black bg-black ${compact ? "aspect-[4/3]" : "aspect-square"}`}>
         <Cropper
           image={imageSrc}
           crop={crop}
@@ -62,55 +88,27 @@ export default function CropStage({ imageSrc, format, onCancel, onComplete }: Pr
           onCropComplete={handleCropComplete}
         />
       </div>
-
-      <div className="w-full flex items-center gap-3 px-1">
-        <span className="text-xs text-paper/50 shrink-0" aria-hidden="true">
-          −
-        </span>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-bold" aria-hidden="true">−</span>
         <input
           type="range"
           min={1}
           max={3}
           step={0.01}
           value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          aria-label="Zoom"
-          className="w-full accent-gold h-11 touch-none"
+          onChange={(event) => setZoom(Number(event.target.value))}
+          aria-label="Photo zoom"
+          className="h-9 w-full accent-coral"
         />
-        <span className="text-sm text-paper/50 shrink-0" aria-hidden="true">
-          +
-        </span>
+        <span className="text-xs font-bold" aria-hidden="true">+</span>
       </div>
-
-      <p className="text-xs text-paper/40 text-center">
-        Drag to reposition, pinch or use the slider to zoom. Looks good already? Just hit
-        Continue.
+      <p className="text-[10px] font-semibold text-ink/55">
+        {faceStatus === "looking"
+          ? "Looking for a face…"
+          : faceStatus === "found"
+            ? "Face found. Drag or zoom to fine-tune."
+            : "Centered automatically. Drag or zoom to adjust."}
       </p>
-
-      {error && (
-        <p role="alert" className="text-sm text-coral text-center">
-          {error}
-        </p>
-      )}
-
-      <div className="w-full flex gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isExporting}
-          className="flex-1 min-h-[44px] rounded-xl border border-gold/25 text-paper/70 text-sm font-medium hover:text-paper hover:border-gold/50 disabled:opacity-50 transition-colors"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={handleContinue}
-          disabled={isExporting || !croppedAreaPixels}
-          className="flex-1 min-h-[44px] rounded-xl bg-gold text-ink text-sm font-semibold hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-colors"
-        >
-          {isExporting ? "Processing…" : "Continue"}
-        </button>
-      </div>
     </div>
   );
 }
