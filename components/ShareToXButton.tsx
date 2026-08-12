@@ -20,6 +20,12 @@ type ShareStatus = "idle" | "uploading" | "error";
 
 const SHARE_HASHTAG = BRAND.hashtag.replace(/^#/, "");
 
+const FILENAMES: Record<Format, string> = {
+  pfp: "hh-goa-2026-frame.png",
+  card: "hh-goa-2026-builder-pass.png",
+  team: "hh-goa-2026-team-frame.png",
+};
+
 function shareViaLinkIntent(caption: string, shareUrl: string) {
   const text = encodeURIComponent(caption);
   const url = encodeURIComponent(shareUrl);
@@ -31,17 +37,51 @@ function shareViaLinkIntent(caption: string, shareUrl: string) {
   );
 }
 
+function canShareFiles(file: File): boolean {
+  return typeof navigator !== "undefined" && typeof navigator.canShare === "function"
+    ? navigator.canShare({ files: [file] })
+    : false;
+}
+
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError")
+  );
+}
+
 export default function ShareToXButton({ blob, format, name, fields }: Props) {
   const [status, setStatus] = useState<ShareStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const caption = BRAND.shareCaption(name);
+  const shareId = fields?.name && fields?.role ? computeBuilderIdCode(fields) : undefined;
+  const caption = BRAND.shareCaption(name, shareId);
 
   const handleShare = async () => {
     setStatus("uploading");
     setError(null);
     try {
-      const shareId = fields?.name && fields?.role ? computeBuilderIdCode(fields) : undefined;
+      const file = new File([blob], FILENAMES[format], { type: "image/png" });
+
+      // Mobile-first: attach the PNG via the OS share sheet (Android/iOS).
+      if (canShareFiles(file) && typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            files: [file],
+            text: `${caption} ${BRAND.hashtag}`,
+          });
+          setStatus("idle");
+          return;
+        } catch (err) {
+          if (isAbortError(err)) {
+            setStatus("idle");
+            return;
+          }
+          // Unexpected share failure — fall through to link-intent.
+        }
+      }
+
+      // Desktop / unsupported browsers: upload + X web intent with preview link.
       const { shareUrl } = await uploadToShareStore(blob, format, shareId);
       shareViaLinkIntent(caption, shareUrl);
       setStatus("idle");
@@ -50,7 +90,7 @@ export default function ShareToXButton({ blob, format, name, fields }: Props) {
       setError(
         err instanceof ShareUploadError
           ? err.message
-          : "Couldn't prep the share link. You can still download the image and post it manually."
+          : "Couldn't prep the share. You can still download the image and post it manually."
       );
     }
   };

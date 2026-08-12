@@ -34,10 +34,12 @@ export const BRAND = {
     photoSlot: { x: 72, y: 224, width: 628, height: 776, cornerRadius: 24 },
   },
 
-  shareCaption: (name?: string) =>
-    name
+  shareCaption: (name?: string, idCode?: string) => {
+    const base = name
       ? `${name} is building toward HH Goa 2026. See you by the signal.`
-      : "I just built my HH Goa 2026 frame. See you by the signal.",
+      : "I just built my HH Goa 2026 frame. See you by the signal.";
+    return idCode ? `${base} · #${idCode}` : base;
+  },
 };
 
 export const CARD_TEXT_LAYOUT = {
