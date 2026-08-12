@@ -105,9 +105,15 @@ export default function ShareToXButton({ blob, format, name, fields }: Props) {
         disabled={isBusy}
         className="brutal-button inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-coral px-8 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60 sm:w-auto"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/social-x.svg" alt="" className="h-5 w-5 object-contain" />
-        {status === "uploading" ? "Preparing…" : "Share to X"}
+        {status === "uploading" ? (
+          "Preparing…"
+        ) : (
+          <>
+            <span>Share to</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/social-x.svg" alt="X" className="h-5 w-5 object-contain" />
+          </>
+        )}
       </button>
 
       {error && (

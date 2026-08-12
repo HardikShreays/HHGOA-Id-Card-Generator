@@ -12,13 +12,19 @@ const inputClass =
 
 export default function BuilderFieldsForm({ value, onChange }: Props) {
   const update = (patch: Partial<BuilderFields>) => onChange({ ...value, ...patch });
-  const updateSocial = (key: "x" | "github", raw: string) =>
+  const updateSocial = (key: "x" | "github" | "instagram", raw: string) => {
+    const handle = raw
+      .replace(/^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com|github\.com|instagram\.com)\//i, "")
+      .replace(/^@/, "")
+      .replace(/\/.*$/, "")
+      .slice(0, 24);
     update({
       socials: {
         ...value.socials,
-        [key]: raw.replace(/^@/, "").slice(0, 24),
+        [key]: handle,
       },
     });
+  };
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -50,6 +56,22 @@ export default function BuilderFieldsForm({ value, onChange }: Props) {
         <input
           value={value.socials?.x ?? ""}
           onChange={(event) => updateSocial("x", event.target.value)}
+          placeholder="@handle"
+          className={inputClass}
+        />
+      </Field>
+      <Field label="GitHub ID (optional)">
+        <input
+          value={value.socials?.github ?? ""}
+          onChange={(event) => updateSocial("github", event.target.value)}
+          placeholder="octocat"
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Instagram (optional)">
+        <input
+          value={value.socials?.instagram ?? ""}
+          onChange={(event) => updateSocial("instagram", event.target.value)}
           placeholder="@handle"
           className={inputClass}
         />

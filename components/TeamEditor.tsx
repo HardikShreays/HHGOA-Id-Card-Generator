@@ -16,9 +16,19 @@ type DraftMember = {
   cropped: CroppedImage | null;
 };
 
-const placeholderCrop: CroppedImage = { objectUrl: "/brand/no-image-placeholder.svg", width: 800, height: 1000 };
-const newMember = (id: number): DraftMember => ({ id, name: "", role: "", image: null, cropped: placeholderCrop });
-const inputClass = "min-h-11 w-full rounded-xl border-2 border-black bg-white px-3 text-sm shadow-[3px_3px_0_#000]";
+const PREVIEW_PLACEHOLDER: CroppedImage = {
+  objectUrl: "/brand/no-image-placeholder.png",
+  width: 800,
+  height: 1000,
+};
+const newMember = (id: number): DraftMember => ({
+  id,
+  name: "",
+  role: "",
+  image: null,
+  cropped: PREVIEW_PLACEHOLDER,
+});
+const inputClass = "min-h-11 w-full rounded-xl border-2 border-black bg-white px-3 text-sm shadow-[3px_3px_0_#000] placeholder:text-ink/35";
 
 export default function TeamEditor() {
   const [teamName, setTeamName] = useState("");
@@ -49,6 +59,8 @@ export default function TeamEditor() {
     });
     setError(null);
   }, []);
+
+  const hasAllRealPhotos = members.every((member) => Boolean(member.image));
 
   return (
     <div>
@@ -89,25 +101,22 @@ export default function TeamEditor() {
             <div className="rounded-xl border-2 border-black bg-parchment p-3">
               {!rendered && (
                 <div className="flex min-h-[330px] items-center justify-center px-8 text-center text-xs font-bold text-forest">
-                  Building the team preview…
+                  Preparing your team preview…
                 </div>
               )}
               {rendered && <ResultPanel format="team" rendered={rendered} />}
               {teamFields && <CanvasRenderer format="team" teamFields={teamFields} onComplete={handleRendered} onError={setError} />}
-              {error && <p role="alert" className="mt-3 text-xs font-bold text-gold">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-xs font-bold text-coral">{error}</p>}
             </div>
           </div>
 
           {rendered && (
             <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 text-ink shadow-[7px_7px_0_#000]">
-              <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[.18em] text-coral">
-                Download &amp; share
-              </p>
               <ResultActions
                 format="team"
                 rendered={rendered}
                 name={teamName}
-                actionsEnabled={members.every((member) => Boolean(member.image))}
+                actionsEnabled={hasAllRealPhotos}
               />
             </div>
           )}
@@ -131,12 +140,14 @@ function MemberCard({
 
   return (
     <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 text-ink shadow-[6px_6px_0_#000]">
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-coral">Teammate {index + 1}</p>
-      {!member.image ? <UploadDropzone onImageReady={handleImage} /> : (
-        <>
-          <CropStage imageSrc={member.image.objectUrl} format="team" onChange={handleCrop} compact />
-          <div className="mt-3"><UploadDropzone onImageReady={handleImage} compact /></div>
-        </>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-coral">Teammate {index + 1}</p>
+        {member.image && <UploadDropzone onImageReady={handleImage} compact />}
+      </div>
+      {!member.image ? (
+        <UploadDropzone onImageReady={handleImage} />
+      ) : (
+        <CropStage imageSrc={member.image.objectUrl} format="team" onChange={handleCrop} compact />
       )}
       <div className="mt-4 grid gap-3">
         <input value={member.name} onChange={(event) => onUpdate(member.id, { name: event.target.value.slice(0, 30) })} placeholder="Name" className={inputClass} />

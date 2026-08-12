@@ -9,15 +9,15 @@ import ResultPanel, { ResultActions } from "./ResultPanel";
 import type { BuilderFields } from "@/lib/canvasCompose";
 import type { CroppedImage, Format, UploadedImage } from "@/lib/constants";
 
-const PLACEHOLDER: CroppedImage = {
-  objectUrl: "/brand/no-image-placeholder.svg",
+const PREVIEW_PLACEHOLDER: CroppedImage = {
+  objectUrl: "/brand/no-image-placeholder.png",
   width: 800,
   height: 1000,
 };
 
 export default function EditorWorkspace({ format }: { format: Exclude<Format, "team"> }) {
   const [image, setImage] = useState<UploadedImage | null>(null);
-  const [cropped, setCropped] = useState<CroppedImage | null>(PLACEHOLDER);
+  const [cropped, setCropped] = useState<CroppedImage | null>(PREVIEW_PLACEHOLDER);
   const [fields, setFields] = useState<BuilderFields>({ name: "", role: "" });
   const [rendered, setRendered] = useState<RenderedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +28,11 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
       return next;
     });
     setCropped(null);
+    setRendered((previous) => {
+      if (previous) URL.revokeObjectURL(previous.objectUrl);
+      return null;
+    });
+    setError(null);
   }, []);
 
   const handleCropped = useCallback((next: CroppedImage) => {
@@ -42,18 +47,24 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
     setError(null);
   }, []);
 
+  const hasRealPhoto = Boolean(
+    image && cropped && cropped.objectUrl !== PREVIEW_PLACEHOLDER.objectUrl
+  );
+
   return (
     <div>
       <EditorHeading format={format} />
       <div className="mt-6 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(340px,.82fr)]">
         <div className="flex min-w-0 flex-col gap-6">
         <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 shadow-[7px_7px_0_#000]">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-coral">Photo</p>
-          {!image ? <UploadDropzone onImageReady={handleImage} /> : (
-            <div className="flex flex-col gap-3">
-              <CropStage imageSrc={image.objectUrl} format={format} onChange={handleCropped} compact />
-              <UploadDropzone onImageReady={handleImage} compact />
-            </div>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-coral">Photo</p>
+            {image && <UploadDropzone onImageReady={handleImage} compact />}
+          </div>
+          {!image ? (
+            <UploadDropzone onImageReady={handleImage} />
+          ) : (
+            <CropStage imageSrc={image.objectUrl} format={format} onChange={handleCropped} compact />
           )}
         </div>
         <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 shadow-[7px_7px_0_#000]">
@@ -70,7 +81,7 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
             <div className="rounded-xl border-2 border-black bg-parchment p-3">
               {!rendered && (
                 <div className="flex min-h-[360px] items-center justify-center px-8 text-center text-xs font-bold text-forest">
-                  Building the preview…
+                  Preparing your preview…
                 </div>
               )}
               {rendered && <ResultPanel format={format} rendered={rendered} />}
@@ -83,21 +94,18 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
                   onError={setError}
                 />
               )}
-              {error && <p role="alert" className="mt-3 text-xs font-bold text-gold">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-xs font-bold text-coral">{error}</p>}
             </div>
           </div>
 
           {rendered && (
             <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 text-ink shadow-[7px_7px_0_#000]">
-              <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[.18em] text-coral">
-                Download &amp; share
-              </p>
               <ResultActions
                 format={format}
                 rendered={rendered}
                 name={fields.name}
                 fields={fields}
-                actionsEnabled={Boolean(image && cropped?.objectUrl !== PLACEHOLDER.objectUrl)}
+                actionsEnabled={hasRealPhoto}
               />
             </div>
           )}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { RenderedResult } from "@/components/CanvasRenderer";
-import ShareToXButton from "@/components/ShareToXButton";
+import type { RenderedResult } from "./CanvasRenderer";
+import ShareToXButton from "./ShareToXButton";
 import type { Format } from "@/lib/constants";
 import type { BuilderFields } from "@/lib/canvasCompose";
 
@@ -126,9 +126,9 @@ export function ResultActions({
           <ShareToXButton blob={rendered.blob} format={format} name={name} fields={fields} />
         ) : (
           <button type="button" disabled className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-coral px-8 text-sm font-bold text-white opacity-45 sm:w-auto">
+            <span>Share to</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/social-x.svg" alt="" className="h-5 w-5 object-contain" />
-            Share to X
+            <img src="/brand/social-x.svg" alt="X" className="h-5 w-5 object-contain" />
           </button>
         )}
       </div>

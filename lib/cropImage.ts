@@ -3,13 +3,25 @@
 // cropped image (Blob/objectUrl), ready to hand to the Phase 3 canvas
 // compositor. Pure/framework-agnostic, mirrors the pattern in plan §4 Phase 3.
 
+import { canvasToBlob } from "./canvasCompose";
+
 export type PixelCrop = { x: number; y: number; width: number; height: number };
 
-function loadHtmlImage(src: string): Promise<HTMLImageElement> {
+function loadHtmlImage(src: string, timeoutMs = 10000): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Failed to load image for cropping."));
+    const timer = window.setTimeout(
+      () => reject(new Error("Timed out loading image for cropping.")),
+      timeoutMs
+    );
+    img.onload = () => {
+      window.clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("Failed to load image for cropping."));
+    };
     img.src = src;
   });
 }
@@ -53,12 +65,7 @@ export async function getCroppedImage(
     outH
   );
 
-  const blob: Blob = await new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("Failed to export cropped image."))),
-      "image/png"
-    );
-  });
+  const blob = await canvasToBlob(canvas, "image/png");
 
   return { objectUrl: URL.createObjectURL(blob), width: outW, height: outH };
 }

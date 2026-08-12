@@ -2,6 +2,7 @@
 // File validation + downscale-on-load, shared by UploadDropzone (Phase 1)
 // and later reused by the crop/render stages.
 
+import { canvasToBlob } from "./canvasCompose";
 import { UPLOAD_LIMITS } from "./constants";
 
 export type ValidationResult =
@@ -36,11 +37,21 @@ export function validateUploadFile(file: File): ValidationResult {
 }
 
 /** Loads a Blob into an HTMLImageElement via an object URL. Caller owns the returned URL. */
-function loadHtmlImage(objectUrl: string): Promise<HTMLImageElement> {
+function loadHtmlImage(objectUrl: string, timeoutMs = 15000): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Failed to decode image."));
+    const timer = window.setTimeout(
+      () => reject(new Error("Timed out decoding image.")),
+      timeoutMs
+    );
+    img.onload = () => {
+      window.clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("Failed to decode image."));
+    };
     img.src = objectUrl;
   });
 }
@@ -79,13 +90,7 @@ export async function loadAndDownscale(
     if (!ctx) throw new Error("Canvas 2D context unavailable.");
     ctx.drawImage(img, 0, 0, targetW, targetH);
 
-    const resizedBlob: Blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("Failed to downscale image."))),
-        "image/jpeg",
-        0.92
-      );
-    });
+    const resizedBlob = await canvasToBlob(canvas, "image/jpeg", 0.92);
 
     // Original source URL is no longer needed once we've drawn from it.
     URL.revokeObjectURL(sourceUrl);

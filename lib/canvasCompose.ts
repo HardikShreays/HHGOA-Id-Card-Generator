@@ -4,7 +4,7 @@ export type BuilderFields = {
   name: string;
   role: string;
   teamName?: string;
-  socials?: { x?: string; github?: string };
+  socials?: { x?: string; github?: string; instagram?: string };
 };
 
 export type TeamMember = {
@@ -18,10 +18,19 @@ export type TeamFields = {
   members: TeamMember[];
 };
 
+const staticImageCache = new Map<string, Promise<HTMLImageElement>>();
+
 export function loadImage(src: string, timeoutMs = 10000): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
+  const cacheable = src.startsWith("/");
+  const cached = cacheable ? staticImageCache.get(src) : undefined;
+  if (cached) return cached;
+
+  const pending = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
-    if (!src.startsWith("blob:") && !src.startsWith("data:")) img.crossOrigin = "anonymous";
+    // Only opt into CORS for genuinely remote URLs. Setting crossOrigin on
+    // same-origin/relative assets is unnecessary and has tripped up some
+    // mobile browsers, so we skip it for "/brand/…", blob:, and data: srcs.
+    if (/^https?:\/\//i.test(src)) img.crossOrigin = "anonymous";
     const timer = window.setTimeout(() => reject(new Error(`Timed out loading image: ${src}`)), timeoutMs);
     img.onload = () => {
       window.clearTimeout(timer);
@@ -33,6 +42,12 @@ export function loadImage(src: string, timeoutMs = 10000): Promise<HTMLImageElem
     };
     img.src = src;
   });
+
+  if (cacheable) {
+    staticImageCache.set(src, pending);
+    pending.catch(() => staticImageCache.delete(src));
+  }
+  return pending;
 }
 
 const FONT_STACK = [
@@ -163,12 +178,63 @@ export function dottedBorderPath(
   ctx.restore();
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+/**
+ * Exports a canvas to a Blob without ever hanging.
+ *
+ * `canvas.toBlob` is unreliable on some mobile browsers (notably iOS Safari):
+ * the callback can fire with `null`, or never fire at all for large canvases.
+ * When that happens we fall back to the synchronous `toDataURL` path, which is
+ * far more consistent, so the live preview can always resolve.
+ */
+export function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type = "image/png",
+  quality?: number,
+  timeoutMs = 4000
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Canvas export failed."))),
-      "image/png"
-    );
+    let settled = false;
+    const finish = (blob: Blob) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(blob);
+    };
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      reject(error);
+    };
+
+    const fallbackToDataUrl = () => {
+      try {
+        const dataUrl =
+          quality != null ? canvas.toDataURL(type, quality) : canvas.toDataURL(type);
+        const commaIndex = dataUrl.indexOf(",");
+        const meta = dataUrl.slice(0, commaIndex);
+        const base64 = dataUrl.slice(commaIndex + 1);
+        const mime = meta.match(/:(.*?);/)?.[1] ?? type;
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        finish(new Blob([bytes], { type: mime }));
+      } catch (error) {
+        fail(error instanceof Error ? error : new Error("Canvas export failed."));
+      }
+    };
+
+    const timer = window.setTimeout(fallbackToDataUrl, timeoutMs);
+
+    try {
+      canvas.toBlob(
+        (blob) => (blob ? finish(blob) : fallbackToDataUrl()),
+        type,
+        quality
+      );
+    } catch {
+      fallbackToDataUrl();
+    }
   });
 }
 
@@ -512,14 +578,19 @@ export async function drawIdCard(userImageSrc: string, fields: BuilderFields): P
   ctx.fillText(`#${idCode}`, idLayout.x, idLayout.y);
   drawBarcode(ctx, idLayout.x, idLayout.y + 30, 360, 30, seed);
 
-  const socials = [
-    fields.socials?.x ? `X @${fields.socials.x}` : "",
-    fields.socials?.github ? `GH @${fields.socials.github}` : "",
-  ].filter(Boolean).join("  ·  ");
-  if (socials) {
-    ctx.font = `600 15px ${BRAND.fonts.mono}`;
+  const socialLines = [
+    [
+      fields.socials?.x ? `X @${fields.socials.x}` : "",
+      fields.socials?.github ? `GH @${fields.socials.github}` : "",
+    ].filter(Boolean).join("  ·  "),
+    fields.socials?.instagram ? `IG @${fields.socials.instagram}` : "",
+  ].filter(Boolean);
+  if (socialLines.length) {
+    ctx.font = `600 14px ${BRAND.fonts.mono}`;
     ctx.fillStyle = BRAND.colors.ink;
-    ctx.fillText(socials, 460, 1265, 340);
+    socialLines.forEach((line, index) => {
+      ctx.fillText(line, 460, 1228 + index * 27, 340);
+    });
   }
 
   const qr = CARD_TEXT_LAYOUT.qr;

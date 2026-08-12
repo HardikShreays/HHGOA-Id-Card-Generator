@@ -49,6 +49,7 @@ export default function CanvasRenderer(props: Props) {
       } catch (error) {
         if (cancelled || id !== renderId.current) return;
         props.onError(error instanceof Error ? error.message : "Could not generate the preview.");
+        setRendering(false);
       }
     }, 260);
 
