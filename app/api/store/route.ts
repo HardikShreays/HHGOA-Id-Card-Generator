@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
       access: "public",
       contentType: "image/png",
       addRandomSuffix: false,
+      allowOverwrite: true,
       // Ephemeral share images — fine to let these expire; not critical
       // long-term storage. (plan §6.2 — "don't worry about cleanup")
       cacheControlMaxAge: 60 * 60 * 24 * 30,
