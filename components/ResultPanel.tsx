@@ -17,6 +17,7 @@ type Props = {
   onEditFields?: () => void;
   onAdjustCrop?: () => void;
   onNewPhoto?: () => void;
+  onStartNew?: () => void;
   actionsEnabled?: boolean;
 };
 
@@ -91,6 +92,7 @@ export function ResultActions({
   onEditFields,
   onAdjustCrop,
   onNewPhoto,
+  onStartNew,
   actionsEnabled = true,
 }: Props) {
   const [showIOSHint, setShowIOSHint] = useState(false);
@@ -123,7 +125,7 @@ export function ResultActions({
         </button>
 
         {actionsEnabled ? (
-          <ShareToXButton blob={rendered.blob} format={format} name={name} fields={fields} />
+          <ShareToXButton blob={rendered.blob} format={format} name={name} fields={fields} onStartNew={onStartNew} />
         ) : (
           <button type="button" disabled className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-coral px-8 text-sm font-bold text-white opacity-45 sm:w-auto">
             <span>Share to</span>

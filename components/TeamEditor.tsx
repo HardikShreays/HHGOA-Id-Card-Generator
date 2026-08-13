@@ -60,6 +60,21 @@ export default function TeamEditor() {
     setError(null);
   }, []);
 
+  const handleStartNew = useCallback(() => {
+    setTeamName("");
+    setMembers((current) => {
+      for (const member of current) {
+        if (member.image) URL.revokeObjectURL(member.image.objectUrl);
+      }
+      return [newMember(1), newMember(2)];
+    });
+    setRendered((previous) => {
+      if (previous) URL.revokeObjectURL(previous.objectUrl);
+      return null;
+    });
+    setError(null);
+  }, []);
+
   const hasAllRealPhotos = members.every((member) => Boolean(member.image));
 
   return (
@@ -117,6 +132,7 @@ export default function TeamEditor() {
                 rendered={rendered}
                 name={teamName}
                 actionsEnabled={hasAllRealPhotos}
+                onStartNew={handleStartNew}
               />
             </div>
           )}

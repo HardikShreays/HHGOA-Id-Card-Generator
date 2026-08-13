@@ -47,6 +47,20 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
     setError(null);
   }, []);
 
+  const handleStartNew = useCallback(() => {
+    setImage((previous) => {
+      if (previous) URL.revokeObjectURL(previous.objectUrl);
+      return null;
+    });
+    setCropped(PREVIEW_PLACEHOLDER);
+    setFields({ name: "", role: "" });
+    setRendered((previous) => {
+      if (previous) URL.revokeObjectURL(previous.objectUrl);
+      return null;
+    });
+    setError(null);
+  }, []);
+
   const hasRealPhoto = Boolean(
     image && cropped && cropped.objectUrl !== PREVIEW_PLACEHOLDER.objectUrl
   );
@@ -106,6 +120,7 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
                 name={fields.name}
                 fields={fields}
                 actionsEnabled={hasRealPhoto}
+                onStartNew={handleStartNew}
               />
             </div>
           )}
