@@ -19,7 +19,7 @@ type Props = {
 
 type ShareStatus = "idle" | "uploading" | "error";
 
-const SHARE_HASHTAG = BRAND.hashtag.replace(/^#/, "");
+const SHARE_HASHTAG = "hhgoa";
 
 function shareViaLinkIntent(caption: string, shareUrl: string) {
   const text = encodeURIComponent(caption);
