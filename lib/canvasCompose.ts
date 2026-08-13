@@ -334,29 +334,6 @@ export async function drawQRCode(
   ctx.drawImage(offscreen, x, y, size, size);
 }
 
-function drawSticker(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  bg: string,
-  fg: string,
-  rotation = 0
-) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(rotation);
-  ctx.font = `700 19px ${BRAND.fonts.mono}`;
-  const width = ctx.measureText(text).width + 32;
-  fillRoundedRect(ctx, 7, 7, width, 48, 12, BRAND.colors.ink);
-  fillRoundedRect(ctx, 0, 0, width, 48, 12, bg, BRAND.colors.ink, 3);
-  ctx.fillStyle = fg;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, width / 2, 25);
-  ctx.restore();
-}
-
 function drawWaves(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -411,37 +388,12 @@ function drawPalmDoodle(
   ctx.restore();
 }
 
-function drawDrinkDoodle(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 5;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + 18, y + 70);
-  ctx.lineTo(x + 62, y + 70);
-  ctx.lineTo(x + 78, y);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + 48, y + 5);
-  ctx.lineTo(x + 78, y - 38);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(x + 81, y - 42, 13, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-}
-
 export async function drawFrame(userImageSrc: string, fields?: BuilderFields): Promise<Blob> {
   const size = BRAND.canvas.pfpSize;
   await ensureFontsLoaded();
-  const [userImg, goaImg, hackerHouse, ticker, studio] = await Promise.all([
+  const [userImg, frame] = await Promise.all([
     loadImage(userImageSrc),
-    loadImage("/brand/goa-hindi.svg"),
-    loadImage("/brand/hacker-house.png"),
-    loadImage("/brand/ticker.svg"),
-    loadImage("/brand/studio-247.svg"),
+    loadImage("/brand/final-pfp.svg"),
   ]);
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -449,71 +401,51 @@ export async function drawFrame(userImageSrc: string, fields?: BuilderFields): P
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable.");
 
-  ctx.fillStyle = BRAND.colors.gold;
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = BRAND.colors.forest;
-  ctx.beginPath();
-  ctx.arc(600, 600, 590, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = BRAND.colors.coral;
-  ctx.beginPath();
-  ctx.arc(600, 600, 520, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = BRAND.colors.gold;
-  ctx.beginPath();
-  ctx.arc(600, 600, 478, 0, Math.PI * 2);
-  ctx.fill();
-  drawWaves(ctx, 110, 1080, 250, BRAND.colors.gold, 2);
-  drawWaves(ctx, 840, 1080, 250, BRAND.colors.coral, 2);
-  drawPalmDoodle(ctx, 1080, 835, .72, BRAND.colors.gold);
-
   const photoRadius = 444;
   ctx.save();
   ctx.beginPath();
   ctx.arc(600, 600, photoRadius, 0, Math.PI * 2);
   ctx.clip();
-  drawImageCover(ctx, userImg, 156, 156, 888, 888);
+  if (userImageSrc === "/brand/no-image-placeholder.png") {
+    // Preserve the full placeholder artwork so its bottom label remains visible.
+    ctx.drawImage(userImg, 156, 156, 888, 888);
+  } else {
+    drawImageCover(ctx, userImg, 156, 156, 888, 888);
+  }
   ctx.restore();
-  dottedBorderPath(ctx, 148, 148, 904, 904, 452, 20, 5, BRAND.colors.ink);
+  ctx.drawImage(frame, 0, 0, size, size);
 
-  for (let x = 260; x < 940; x += 102) ctx.drawImage(ticker, x, 104, 102, 7);
-  drawImageContain(ctx, hackerHouse, 300, 28, 600, 110);
-  drawImageContain(ctx, goaImg, 50, 52, 164, 164);
-  drawImageContain(ctx, studio, 965, 70, 150, 92);
-
-  if (fields?.name.trim()) {
-    const scrim = PFP_TEXT_LAYOUT.scrim;
-    const gradient = ctx.createLinearGradient(0, scrim.y, 0, scrim.y + scrim.height);
-    gradient.addColorStop(0, "rgba(11,104,57,0)");
-    gradient.addColorStop(1, "rgba(0,0,0,.82)");
+  const nameValue = fields?.name.trim() ?? "";
+  const roleValue = fields?.role.trim() ?? "";
+  if (nameValue || roleValue) {
+    const yellowOuterRadius = 478;
+    const gradientBottom = 600 + yellowOuterRadius;
+    const scrim = ctx.createLinearGradient(0, 790, 0, gradientBottom);
+    scrim.addColorStop(0, "rgba(0,0,0,0)");
+    scrim.addColorStop(1, "rgba(0,0,0,.82)");
     ctx.save();
     ctx.beginPath();
-    ctx.arc(600, 600, photoRadius, 0, Math.PI * 2);
+    ctx.arc(600, 600, yellowOuterRadius, 0, Math.PI * 2);
     ctx.clip();
-    ctx.fillStyle = gradient;
-    ctx.fillRect(140, scrim.y, 920, scrim.height);
+    ctx.fillStyle = scrim;
+    ctx.fillRect(600 - yellowOuterRadius, 790, yellowOuterRadius * 2, gradientBottom - 790);
     ctx.restore();
 
     const name = PFP_TEXT_LAYOUT.name;
-    drawFittedText(ctx, fields.name.trim(), name.cx, name.y, name.maxWidth, name.minFontSize, name.maxFontSize, name.color, "700", BRAND.fonts.display);
-    const { generateBuilderTitle } = await import("./builderTitle");
-    const title = PFP_TEXT_LAYOUT.builderTitle;
-    drawFittedText(ctx, generateBuilderTitle(fields.role || fields.name).toUpperCase(), title.cx, title.y, title.maxWidth, title.minFontSize, title.maxFontSize, title.color, "700", BRAND.fonts.mono);
+    drawFittedText(ctx, nameValue || "YOUR NAME", name.cx, name.y, name.maxWidth, name.minFontSize, name.maxFontSize, BRAND.colors.paper, "700", BRAND.fonts.display);
+    const role = PFP_TEXT_LAYOUT.builderTitle;
+    drawFittedText(ctx, roleValue.toUpperCase() || "STACK / ROLE", role.cx, role.y, role.maxWidth, role.minFontSize, role.maxFontSize, BRAND.colors.coral, "700", BRAND.fonts.mono);
   }
 
-  drawSticker(ctx, BRAND.hashtag.toUpperCase(), 415, 1080, BRAND.colors.gold, BRAND.colors.ink, -0.025);
   return canvasToBlob(canvas);
 }
 
 export async function drawIdCard(userImageSrc: string, fields: BuilderFields): Promise<Blob> {
   const { cardWidth: w, cardHeight: h, photoSlot } = BRAND.canvas;
   await ensureFontsLoaded();
-  const [userImg, goaImg, hackerHouse, footerTrees, studio] = await Promise.all([
+  const [userImg, builderPass] = await Promise.all([
     loadImage(userImageSrc),
-    loadImage("/brand/goa-hindi.svg"),
-    loadImage("/brand/hacker-house.png"),
-    loadImage("/brand/footer-trees.png"),
-    loadImage("/brand/studio-247.svg"),
+    loadImage("/brand/final-builder-pass.svg"),
   ]);
   const canvas = document.createElement("canvas");
   canvas.width = w;
@@ -521,43 +453,25 @@ export async function drawIdCard(userImageSrc: string, fields: BuilderFields): P
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable.");
 
-  ctx.fillStyle = BRAND.colors.parchment;
-  ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = BRAND.colors.forest;
-  ctx.fillRect(0, 0, w, 186);
-  ctx.fillStyle = BRAND.colors.gold;
-  ctx.fillRect(0, 186, w, 16);
-  drawImageContain(ctx, hackerHouse, 66, 34, 700, 108);
-  drawImageContain(ctx, goaImg, 862, 22, 150, 150);
+  ctx.drawImage(builderPass, 0, 0, w, h);
 
-  fillRoundedRect(ctx, photoSlot.x + 12, photoSlot.y + 14, photoSlot.width, photoSlot.height, photoSlot.cornerRadius, BRAND.colors.ink);
-  fillRoundedRect(ctx, photoSlot.x - 7, photoSlot.y - 7, photoSlot.width + 14, photoSlot.height + 14, photoSlot.cornerRadius + 4, BRAND.colors.coral, BRAND.colors.ink, 4);
   ctx.save();
   roundedRectPath(ctx, photoSlot.x, photoSlot.y, photoSlot.width, photoSlot.height, photoSlot.cornerRadius);
   ctx.clip();
-  drawImageCover(ctx, userImg, photoSlot.x, photoSlot.y, photoSlot.width, photoSlot.height);
+  if (userImageSrc === "/brand/no-image-placeholder.png") {
+    ctx.drawImage(userImg, photoSlot.x, photoSlot.y, photoSlot.width, photoSlot.height);
+  } else {
+    drawImageCover(ctx, userImg, photoSlot.x, photoSlot.y, photoSlot.width, photoSlot.height);
+  }
   ctx.restore();
+  ctx.strokeStyle = BRAND.colors.ink;
+  ctx.lineWidth = 5;
+  roundedRectPath(ctx, photoSlot.x, photoSlot.y, photoSlot.width, photoSlot.height, photoSlot.cornerRadius);
+  ctx.stroke();
 
-  fillRoundedRect(ctx, 728, 224, 280, 776, 22, BRAND.colors.gold, BRAND.colors.ink, 4);
-  ctx.fillStyle = BRAND.colors.ink;
-  ctx.font = `700 18px ${BRAND.fonts.mono}`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText("BUILDER ACCESS", 758, 266);
-  ctx.fillText(BRAND.dateRange, 758, 316);
-  ctx.fillText(BRAND.location, 758, 352);
-  ctx.fillRect(758, 402, 220, 4);
-  ctx.font = `700 58px ${BRAND.fonts.display}`;
-  ctx.fillText("2026", 758, 430);
-  ctx.fillStyle = BRAND.colors.coral;
-  ctx.beginPath();
-  ctx.arc(868, 535, 62, 0, Math.PI * 2);
-  ctx.fill();
-  drawWaves(ctx, 758, 700, 220, BRAND.colors.forest, 3);
-  drawPalmDoodle(ctx, 890, 650, .58, BRAND.colors.ink);
-  drawDrinkDoodle(ctx, 920, 930, BRAND.colors.coral);
-  drawSticker(ctx, fields.teamName?.trim() ? `TEAM ${fields.teamName.trim().toUpperCase().slice(0, 14)}` : "LESS NOISE", 754, 566, BRAND.colors.coral, BRAND.colors.paper, 0.035);
-  drawImageContain(ctx, studio, 770, 790, 194, 130);
+  // Clear the template's sample details while preserving its artwork and footer.
+  ctx.fillStyle = BRAND.colors.parchment;
+  ctx.fillRect(48, 850, w - 96, 320);
 
   const name = fields.name.trim();
   const role = fields.role.trim();
@@ -576,7 +490,7 @@ export async function drawIdCard(userImageSrc: string, fields: BuilderFields): P
   ctx.fillStyle = idLayout.color;
   ctx.textAlign = "left";
   ctx.fillText(`#${idCode}`, idLayout.x, idLayout.y);
-  drawBarcode(ctx, idLayout.x, idLayout.y + 30, 360, 30, seed);
+  drawBarcode(ctx, 280, 1120, 470, 30, seed);
 
   const socialLines = [
     [
@@ -589,8 +503,13 @@ export async function drawIdCard(userImageSrc: string, fields: BuilderFields): P
     ctx.font = `600 14px ${BRAND.fonts.mono}`;
     ctx.fillStyle = BRAND.colors.ink;
     socialLines.forEach((line, index) => {
-      ctx.fillText(line, 460, 1228 + index * 27, 340);
+      ctx.fillText(line, 360, 1012 + index * 46, 390);
     });
+  }
+  if (fields.teamName?.trim()) {
+    ctx.font = `600 20px ${BRAND.fonts.mono}`;
+    ctx.fillStyle = BRAND.colors.coral;
+    ctx.fillText(`Team ${fields.teamName.trim()}`, 76, 950, 500);
   }
 
   const qr = CARD_TEXT_LAYOUT.qr;
@@ -600,13 +519,6 @@ export async function drawIdCard(userImageSrc: string, fields: BuilderFields): P
   } catch {
     // QR is a progressive enhancement; never block the export.
   }
-
-  ctx.save();
-  ctx.globalAlpha = 0.22;
-  drawImageCover(ctx, footerTrees, 0, 1268, w, 82);
-  ctx.restore();
-  ctx.fillStyle = BRAND.colors.forest;
-  ctx.fillRect(0, h - 16, w, 16);
   return canvasToBlob(canvas);
 }
 

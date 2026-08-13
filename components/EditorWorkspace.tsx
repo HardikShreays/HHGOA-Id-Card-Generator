@@ -83,7 +83,11 @@ export default function EditorWorkspace({ format }: { format: Exclude<Format, "t
         </div>
         <div className="rounded-2xl border-[3px] border-black bg-parchment p-4 shadow-[7px_7px_0_#000]">
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-coral">Details</p>
-          <BuilderFieldsForm value={fields} onChange={setFields} />
+          <BuilderFieldsForm
+            value={fields}
+            onChange={setFields}
+            basicOnly={format === "pfp"}
+          />
         </div>
         </div>
 

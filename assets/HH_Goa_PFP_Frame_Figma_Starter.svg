@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <title>HH Goa 2026 - Editable PFP Frame</title>
+  <desc>Transparent-center profile frame. Place a square photo behind this frame in Figma.</desc>
+  <defs>
+    <clipPath id="photoOpening">
+      <circle cx="600" cy="600" r="444"/>
+    </clipPath>
+    <linearGradient id="nameScrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B6839" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity=".82"/>
+    </linearGradient>
+  </defs>
+
+  <g id="01_Outer_Background">
+    <path fill="#FEE101" fill-rule="evenodd" d="M0 0H1200V1200H0Z M600 156A444 444 0 1 0 600 1044A444 444 0 1 0 600 156Z"/>
+  </g>
+
+  <g id="02_Color_Rings">
+    <path fill="#0B6839" fill-rule="evenodd" d="M600 10A590 590 0 1 0 600 1190A590 590 0 1 0 600 10Z M600 80A520 520 0 1 1 600 1120A520 520 0 1 1 600 80Z"/>
+    <path fill="#FF0080" fill-rule="evenodd" d="M600 80A520 520 0 1 0 600 1120A520 520 0 1 0 600 80Z M600 122A478 478 0 1 1 600 1078A478 478 0 1 1 600 122Z"/>
+    <path fill="#FEE101" fill-rule="evenodd" d="M600 122A478 478 0 1 0 600 1078A478 478 0 1 0 600 122Z M600 156A444 444 0 1 1 600 1044A444 444 0 1 1 600 156Z"/>
+  </g>
+
+  <g id="03_Photo_Guide">
+    <circle cx="600" cy="600" r="452" fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 19"/>
+  </g>
+
+  <g id="04_Header_Branding">
+    <g id="Ticker">
+      <path d="M260 107H940" stroke="#000000" stroke-width="7" stroke-dasharray="42 18"/>
+    </g>
+    <text x="300" y="105" fill="#FEE101" stroke="#000000" stroke-width="4" paint-order="stroke" font-family="Imbue, Georgia, serif" font-size="78" font-weight="700" textLength="600" lengthAdjust="spacingAndGlyphs">HACKER HOUSE</text>
+
+    <g id="Goa_Badge">
+      <circle cx="132" cy="132" r="82" fill="#FF0080" stroke="#000000" stroke-width="6"/>
+      <circle cx="132" cy="132" r="65" fill="#FEE101"/>
+      <text x="132" y="142" text-anchor="middle" fill="#0B6839" font-family="Victor Mono, monospace" font-size="28" font-weight="700">GOA</text>
+    </g>
+
+    <g id="Studio_Badge">
+      <rect x="965" y="70" width="150" height="92" rx="18" fill="#0B6839" stroke="#000000" stroke-width="5"/>
+      <text x="1040" y="111" text-anchor="middle" fill="#FEE101" font-family="Victor Mono, monospace" font-size="18" font-weight="700">2:47 PM</text>
+      <text x="1040" y="140" text-anchor="middle" fill="#FFFFFF" font-family="Victor Mono, monospace" font-size="13" font-weight="700">STUDIO</text>
+    </g>
+  </g>
+
+  <g id="05_Decorations" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g id="Left_Waves" stroke="#FEE101" stroke-width="8">
+      <path d="M110 1080q25-24 50 0t50 0t50 0t50 0t50 0"/>
+      <path d="M110 1114q25-24 50 0t50 0t50 0t50 0t50 0"/>
+    </g>
+    <g id="Right_Waves" stroke="#FF0080" stroke-width="8">
+      <path d="M840 1080q25-24 50 0t50 0t50 0t50 0t50 0"/>
+      <path d="M840 1114q25-24 50 0t50 0t50 0t50 0t50 0"/>
+    </g>
+    <g id="Palm_Doodle" stroke="#FEE101" stroke-width="9">
+      <path d="M1080 835q-18 92-1 183"/>
+      <path d="M1080 842q-58-54-118-34"/>
+      <path d="M1080 842q-17-76-76-92"/>
+      <path d="M1080 842q32-71 95-77"/>
+      <path d="M1080 842q65-42 111-7"/>
+      <path d="M1080 842q57 4 83 52"/>
+    </g>
+  </g>
+
+  <g id="06_Optional_Name_Overlay">
+    <rect x="156" y="790" width="888" height="254" fill="url(#nameScrim)" clip-path="url(#photoOpening)"/>
+    <text id="Builder_Name" x="600" y="900" text-anchor="middle" fill="#FFFFFF" stroke="#000000" stroke-width="3" paint-order="stroke" font-family="Imbue, Georgia, serif" font-size="64" font-weight="700">YOUR NAME</text>
+    <text id="Builder_Title" x="600" y="958" text-anchor="middle" fill="#FEE101" stroke="#000000" stroke-width="2" paint-order="stroke" font-family="Victor Mono, monospace" font-size="22" font-weight="700">BUILDING THE SIGNAL</text>
+  </g>
+
+  <g id="07_Hashtag_Sticker">
+    <rect x="423" y="1089" width="370" height="72" rx="18" fill="#000000"/>
+    <rect x="415" y="1080" width="370" height="72" rx="18" fill="#FEE101" stroke="#000000" stroke-width="5"/>
+    <text x="600" y="1127" text-anchor="middle" fill="#000000" font-family="Victor Mono, monospace" font-size="26" font-weight="700">#FRAMEINGOA</text>
+  </g>
+</svg>

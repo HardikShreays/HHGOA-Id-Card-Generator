@@ -5,12 +5,13 @@ import type { BuilderFields } from "@/lib/canvasCompose";
 type Props = {
   value: BuilderFields;
   onChange: (fields: BuilderFields) => void;
+  basicOnly?: boolean;
 };
 
 const inputClass =
   "min-h-[44px] w-full rounded-xl border-2 border-black bg-white px-3 text-sm text-ink shadow-[3px_3px_0_#000] placeholder:text-ink/35 focus:bg-gold/10 focus:outline-none";
 
-export default function BuilderFieldsForm({ value, onChange }: Props) {
+export default function BuilderFieldsForm({ value, onChange, basicOnly = false }: Props) {
   const update = (patch: Partial<BuilderFields>) => onChange({ ...value, ...patch });
   const updateSocial = (key: "x" | "github" | "instagram", raw: string) => {
     const handle = raw
@@ -44,38 +45,42 @@ export default function BuilderFieldsForm({ value, onChange }: Props) {
           className={inputClass}
         />
       </Field>
-      <Field label="Team name (optional)">
-        <input
-          value={value.teamName ?? ""}
-          onChange={(event) => update({ teamName: event.target.value.slice(0, 30) })}
-          placeholder="Nightshift"
-          className={inputClass}
-        />
-      </Field>
-      <Field label="X handle (optional)">
-        <input
-          value={value.socials?.x ?? ""}
-          onChange={(event) => updateSocial("x", event.target.value)}
-          placeholder="@handle"
-          className={inputClass}
-        />
-      </Field>
-      <Field label="GitHub ID (optional)">
-        <input
-          value={value.socials?.github ?? ""}
-          onChange={(event) => updateSocial("github", event.target.value)}
-          placeholder="octocat"
-          className={inputClass}
-        />
-      </Field>
-      <Field label="Instagram (optional)">
-        <input
-          value={value.socials?.instagram ?? ""}
-          onChange={(event) => updateSocial("instagram", event.target.value)}
-          placeholder="@handle"
-          className={inputClass}
-        />
-      </Field>
+      {!basicOnly && (
+        <>
+          <Field label="Team name (optional)">
+            <input
+              value={value.teamName ?? ""}
+              onChange={(event) => update({ teamName: event.target.value.slice(0, 30) })}
+              placeholder="Nightshift"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="X handle (optional)">
+            <input
+              value={value.socials?.x ?? ""}
+              onChange={(event) => updateSocial("x", event.target.value)}
+              placeholder="@handle"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="GitHub ID (optional)">
+            <input
+              value={value.socials?.github ?? ""}
+              onChange={(event) => updateSocial("github", event.target.value)}
+              placeholder="octocat"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Instagram (optional)">
+            <input
+              value={value.socials?.instagram ?? ""}
+              onChange={(event) => updateSocial("instagram", event.target.value)}
+              placeholder="@handle"
+              className={inputClass}
+            />
+          </Field>
+        </>
+      )}
     </div>
   );
 }

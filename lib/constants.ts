@@ -28,10 +28,10 @@ export const BRAND = {
   canvas: {
     pfpSize: 1200,
     cardWidth: 1080,
-    cardHeight: 1350,
+    cardHeight: 1277,
     teamWidth: 1200,
     teamHeight: 630,
-    photoSlot: { x: 72, y: 224, width: 628, height: 776, cornerRadius: 24 },
+    photoSlot: { x: 72, y: 222, width: 628, height: 600, cornerRadius: 24 },
   },
 
   shareCaption: (name?: string, idCode?: string, format: Format = "card") => {
@@ -57,11 +57,11 @@ export const BRAND = {
 };
 
 export const CARD_TEXT_LAYOUT = {
-  name: { x: 72, y: 1028, maxWidth: 740, maxFontSize: 72, minFontSize: 34, color: BRAND.colors.forest },
-  role: { x: 76, y: 1110, maxWidth: 680, maxFontSize: 27, minFontSize: 16, color: BRAND.colors.ink },
-  builderTitle: { x: 76, y: 1158, maxWidth: 680, maxFontSize: 23, minFontSize: 14, color: BRAND.colors.coral },
-  idCode: { x: 76, y: 1235, fontSize: 18, color: BRAND.colors.ink },
-  qr: { x: 850, y: 1080, size: 152 },
+  name: { x: 72, y: 860, maxWidth: 700, maxFontSize: 72, minFontSize: 34, color: BRAND.colors.forest },
+  role: { x: 76, y: 1008, maxWidth: 250, maxFontSize: 27, minFontSize: 16, color: BRAND.colors.ink },
+  builderTitle: { x: 76, y: 1056, maxWidth: 300, maxFontSize: 23, minFontSize: 14, color: BRAND.colors.coral },
+  idCode: { x: 76, y: 1118, fontSize: 18, color: BRAND.colors.ink },
+  qr: { x: 850, y: 900, size: 152 },
 };
 
 export const PFP_TEXT_LAYOUT = {
@@ -129,10 +129,10 @@ export const FORMAT_CONFIG: Record<
   card: {
     label: "Builder ID Card",
     shortLabel: "ID Card",
-    aspect: 628 / 776,
+    aspect: 628 / 600,
     cropShape: "rect",
     maxOutputEdge: 1600,
-    outputDims: "1080×1350",
+    outputDims: "1080×1277",
     description: "A share-ready event badge with your role and builder title.",
   },
   team: {
