@@ -34,11 +34,25 @@ export const BRAND = {
     photoSlot: { x: 72, y: 224, width: 628, height: 776, cornerRadius: 24 },
   },
 
-  shareCaption: (name?: string, idCode?: string) => {
-    const base = name
-      ? `${name} is building toward HH Goa 2026. See you by the signal.`
-      : "I just built my HH Goa 2026 frame. See you by the signal.";
-    return idCode ? `${base} · #${idCode}` : base;
+  shareCaption: (name?: string, idCode?: string, format: Format = "card") => {
+    const who = name?.trim();
+    const headline =
+      format === "team"
+        ? who
+          ? `${who} locked in a team frame for HH Goa 2026.`
+          : "Locked in a team frame for HH Goa 2026."
+        : format === "pfp"
+          ? who
+            ? `${who} framed up for HH Goa 2026.`
+            : "Framed up for HH Goa 2026."
+          : who
+            ? `${who} locked in a Builder ID for HH Goa 2026.`
+            : "Locked in a Builder ID for HH Goa 2026.";
+
+    const lines = ["Less noise. More signal.", "", headline];
+    if (idCode) lines.push(`#${idCode}`);
+    lines.push("", "28–31 Oct · Goa", "", "Grab yours");
+    return lines.join("\n");
   },
 };
 

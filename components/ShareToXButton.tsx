@@ -46,7 +46,7 @@ export default function ShareToXButton({ blob, format, name, fields, onStartNew 
   }, [blob]);
 
   const shareId = fields?.name && fields?.role ? computeBuilderIdCode(fields) : undefined;
-  const caption = BRAND.shareCaption(name, shareId);
+  const caption = BRAND.shareCaption(name, shareId, format);
 
   const openX = (shareUrl: string) => {
     shareViaLinkIntent(caption, shareUrl);
