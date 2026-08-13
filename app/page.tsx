@@ -119,7 +119,7 @@ export default function Home() {
 
 function Hero() {
   return (
-    <section className="relative flex h-screen h-[100svh] min-h-[620px] flex-col items-center justify-center overflow-hidden border-b-[3px] border-black bg-forest px-5 text-center">
+    <section className="relative flex h-screen h-[100svh] min-h-[620px] flex-col items-center justify-start overflow-hidden border-b-[3px] border-black bg-forest px-5 pt-36 text-center sm:justify-center sm:pt-0">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/brand/sunrise.png" alt="" className="hero-parallax absolute inset-x-0 bottom-0 h-[62%] w-full object-cover object-bottom opacity-50" />
       <div className="absolute inset-0 bg-gradient-to-b from-forest via-forest/95 to-forest/25" />
@@ -136,7 +136,7 @@ function Hero() {
         </div>
       </nav>
 
-      <div className="relative z-10 mt-20 flex flex-col items-center sm:mt-16">
+      <div className="relative z-10 flex flex-col items-center sm:mt-16">
       <p className="hero-reveal text-[9px] font-bold uppercase tracking-[.28em] text-gold sm:text-sm">{BRAND.location} · {BRAND.dateRange}</p>
       <h1 className="hero-reveal mt-5 font-[family-name:var(--font-display)] text-[clamp(3.8rem,12vw,8.25rem)] font-bold leading-[.94] tracking-[-.02em]">
         BUILD IN<br />THE SUN
@@ -159,11 +159,11 @@ function Hero() {
 function Signboard({ onPick, signsVisible, interactive }: { onPick: (format: Format, side: "left" | "right") => void; signsVisible: boolean; interactive: boolean }) {
   return (
     <section className={`generator-panel signboard-reveal absolute inset-0 flex items-center justify-center overflow-hidden bg-forest ${interactive ? "pointer-events-auto" : "pointer-events-none"}`}>
-      <div className="signboard-art relative aspect-[1440/937] w-full max-w-[1440px] shrink-0 lg:h-full lg:max-h-full lg:w-auto">
+      <div className="signboard-art relative aspect-[1440/937] w-full max-w-[1440px] shrink-0 scale-[1.15] lg:scale-100 lg:h-full lg:max-h-full lg:w-auto">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/details.png" alt="Goa beach signpost with four directions" className="pointer-events-none absolute inset-0 h-full w-full object-contain" />
 
-        <div className="absolute left-1/2 top-[6%] z-20 w-max max-w-[90%] -translate-x-1/2 text-center">
+        <div className="absolute left-1/2 top-[9%] z-20 w-max max-w-[90%] -translate-x-1/2 text-center lg:top-[6%]">
           <p className="signboard-title font-[family-name:var(--font-display)] font-bold leading-none text-gold">
             CHOOSE WHERE YOU&apos;RE HEADED
           </p>
@@ -193,7 +193,7 @@ function Signboard({ onPick, signsVisible, interactive }: { onPick: (format: For
           );
         })}
 
-        <div className="signboard-footer absolute bottom-[1.35%] left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-full bg-parchment text-center font-bold text-ink">
+        <div className="signboard-footer absolute bottom-[6%] left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-full bg-parchment text-center font-bold text-ink lg:bottom-[1.35%]">
           LIVE PREVIEW · DOWNLOAD · SHARE TO X
         </div>
       </div>
